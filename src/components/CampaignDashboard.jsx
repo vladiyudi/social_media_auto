@@ -11,6 +11,7 @@ export default function CampaignDashboard({ campaignId }) {
   const [campaign, setCampaign] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [selectedPlatform, setSelectedPlatform] = useState(null);
 
   useEffect(() => {
     const fetchCampaign = async () => {
@@ -32,6 +33,16 @@ export default function CampaignDashboard({ campaignId }) {
       fetchCampaign();
     }
   }, [campaignId]);
+
+  useEffect(() => {
+    if (campaign) {
+      setSelectedPlatform(campaign.platforms[0]);
+    }
+  }, [campaign]);
+
+  const handlePlatformChange = (platform) => {
+    setSelectedPlatform(platform);
+  };
 
   if (loading) {
     return (
@@ -83,8 +94,15 @@ export default function CampaignDashboard({ campaignId }) {
       </div>
 
       <div className="space-y-6">
-        <CampaignDetails campaign={campaign} />
-        <CampaignCalendar campaign={campaign} />
+        <CampaignDetails 
+          campaign={campaign}
+          selectedPlatform={selectedPlatform}
+          onPlatformChange={handlePlatformChange}
+        />
+        <CampaignCalendar 
+          campaign={campaign}
+          platform={selectedPlatform}
+        />
       </div>
     </div>
   );
