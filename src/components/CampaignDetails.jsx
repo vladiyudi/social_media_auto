@@ -1,5 +1,8 @@
 'use client';
 
+import { LinkIcon } from '@heroicons/react/24/outline';
+import { getConnectionName } from '@/lib/utils/connections';
+
 const platformStyles = {
   facebook: {
     active: 'bg-blue-500 text-white',
@@ -20,10 +23,12 @@ const platformStyles = {
 };
 
 export default function CampaignDetails({ campaign, selectedPlatform, onPlatformChange }) {
+  const connectionName = getConnectionName(campaign.connection);
+
   return (
     <div className="bg-card p-6 rounded-lg shadow mb-6 w-full">
       <h2 className="text-xl font-semibold mb-4">Campaign Details</h2>
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
         <div>
           <p className="text-sm text-muted-foreground">Start Date</p>
           <p>{new Date(campaign.startDate).toLocaleDateString()}</p>
@@ -31,6 +36,13 @@ export default function CampaignDetails({ campaign, selectedPlatform, onPlatform
         <div>
           <p className="text-sm text-muted-foreground">End Date</p>
           <p>{new Date(campaign.endDate).toLocaleDateString()}</p>
+        </div>
+        <div>
+          <p className="text-sm text-muted-foreground">Connection</p>
+          <div className="flex items-center gap-2">
+            <LinkIcon className="h-4 w-4 text-muted-foreground" />
+            <p>{connectionName}</p>
+          </div>
         </div>
         <div>
           <p className="text-sm text-muted-foreground mb-2">Platforms</p>

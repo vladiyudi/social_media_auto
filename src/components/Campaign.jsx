@@ -5,6 +5,8 @@ import { useRouter } from 'next/navigation';
 import { Cross } from '@/components/ui/cross';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { LinkIcon } from '@heroicons/react/24/outline';
+import { getConnectionName } from '@/lib/utils/connections';
 
 const platformStyles = {
   facebook: 'bg-blue-100 text-blue-800',
@@ -19,11 +21,13 @@ export default function Campaign({
   description, 
   startDate, 
   endDate, 
-  platforms, 
+  platforms,
+  connection,
   onDelete 
 }) {
   const router = useRouter();
   const [deleteState, setDeleteState] = useState(false);
+  const connectionName = getConnectionName(connection);
 
   const handleDelete = (e) => {
     e.stopPropagation();
@@ -75,6 +79,10 @@ export default function Campaign({
       </div>
 
       <div className="p-4 h-full flex flex-col">
+        <div className="flex items-center gap-2 mb-2 text-muted-foreground">
+          <LinkIcon className="h-4 w-4" />
+          <span className="text-sm">{connectionName}</span>
+        </div>
         <h3 className="text-lg font-medium text-foreground truncate mb-2">
           {name}
         </h3>

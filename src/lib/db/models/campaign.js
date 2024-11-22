@@ -11,6 +11,7 @@ const campaignSchema = new mongoose.Schema({
   description: { type: String, required: true },
   startDate: { type: Date, required: true },
   endDate: { type: Date, required: true },
+  connection: { type: String, required: true },
   platforms: [{
     type: String,
     enum: ['facebook', 'instagram', 'twitter', 'linkedin'],

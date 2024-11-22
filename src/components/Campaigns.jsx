@@ -87,6 +87,7 @@ export default function Campaigns() {
           startDate={new Date(campaign.startDate)}
           endDate={new Date(campaign.endDate)}
           platforms={campaign.platforms}
+          connection={campaign.connection}
           onDelete={() => handleCampaignDelete(campaign._id)}
         />
       ))}
