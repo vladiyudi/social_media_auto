@@ -1,5 +1,10 @@
 import mongoose from 'mongoose';
 
+// Delete the existing model if it exists
+if (mongoose.models.Campaign) {
+  delete mongoose.models.Campaign;
+}
+
 const campaignSchema = new mongoose.Schema({
   userId: { type: String, required: true },
   name: { type: String, required: true },
@@ -8,12 +13,11 @@ const campaignSchema = new mongoose.Schema({
   endDate: { type: Date, required: true },
   platforms: [{
     type: String,
-    enum: ['facebook', 'instagram'],
+    enum: ['facebook', 'instagram', 'twitter', 'linkedin'],
     required: true
   }],
   createdAt: { type: Date, default: Date.now },
   updatedAt: { type: Date, default: Date.now }
 });
 
-// Prevent duplicate model creation
-export const Campaign = mongoose.models.Campaign || mongoose.model('Campaign', campaignSchema);
+export const Campaign = mongoose.model('Campaign', campaignSchema);

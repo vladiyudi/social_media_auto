@@ -1,5 +1,24 @@
 'use client';
 
+const platformStyles = {
+  facebook: {
+    active: 'bg-blue-500 text-white',
+    inactive: 'bg-blue-100 text-blue-800 hover:bg-blue-200'
+  },
+  instagram: {
+    active: 'bg-pink-500 text-white',
+    inactive: 'bg-pink-100 text-pink-800 hover:bg-pink-200'
+  },
+  twitter: {
+    active: 'bg-sky-500 text-white',
+    inactive: 'bg-sky-100 text-sky-800 hover:bg-sky-200'
+  },
+  linkedin: {
+    active: 'bg-indigo-500 text-white',
+    inactive: 'bg-indigo-100 text-indigo-800 hover:bg-indigo-200'
+  }
+};
+
 export default function CampaignDetails({ campaign, selectedPlatform, onPlatformChange }) {
   return (
     <div className="bg-card p-6 rounded-lg shadow mb-6 w-full">
@@ -22,12 +41,8 @@ export default function CampaignDetails({ campaign, selectedPlatform, onPlatform
                 onClick={() => onPlatformChange(platform)}
                 className={`px-3 py-1.5 rounded-full text-sm transition-colors ${
                   platform === selectedPlatform
-                    ? platform === 'facebook'
-                      ? 'bg-blue-500 text-white'
-                      : 'bg-pink-500 text-white'
-                    : platform === 'facebook'
-                    ? 'bg-blue-100 text-blue-800 hover:bg-blue-200'
-                    : 'bg-pink-100 text-pink-800 hover:bg-pink-200'
+                    ? platformStyles[platform].active
+                    : platformStyles[platform].inactive
                 }`}
               >
                 {platform}

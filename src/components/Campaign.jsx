@@ -6,6 +6,13 @@ import { Cross } from '@/components/ui/cross';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 
+const platformStyles = {
+  facebook: 'bg-blue-100 text-blue-800',
+  instagram: 'bg-pink-100 text-pink-800',
+  twitter: 'bg-sky-100 text-sky-800',
+  linkedin: 'bg-indigo-100 text-indigo-800'
+};
+
 export default function Campaign({ 
   id, 
   name, 
@@ -80,10 +87,7 @@ export default function Campaign({
             <Badge 
               key={platform}
               variant="secondary"
-              className={`${
-                platform === 'facebook' ? 'bg-blue-100 text-blue-800' : 
-                platform === 'instagram' ? 'bg-pink-100 text-pink-800' : ''
-              }`}
+              className={platformStyles[platform]}
             >
               {platform}
             </Badge>

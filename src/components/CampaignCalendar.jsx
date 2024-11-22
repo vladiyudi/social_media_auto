@@ -14,6 +14,16 @@ const platformStyles = {
     highlight: 'bg-pink-50',
     active: 'bg-pink-500',
     text: 'text-pink-600'
+  },
+  twitter: {
+    highlight: 'bg-sky-50',
+    active: 'bg-sky-500',
+    text: 'text-sky-600'
+  },
+  linkedin: {
+    highlight: 'bg-indigo-50',
+    active: 'bg-indigo-500',
+    text: 'text-indigo-600'
   }
 };
 
