@@ -12,23 +12,38 @@ export default function CampaignPost({ day, platform, postData, styles, onUpdate
     setCurrentPostData(postData);
   }, [postData]);
 
-  const handleSavePost = async (newContent) => {
+  const handleSavePost = async ({ postId, content, idea, imagePrompt, imageUrl }) => {
+    console.log('HandleSavePost received:', {
+      postId,
+      content,
+      idea,
+      imagePrompt,
+      imageUrl,
+      currentPostData
+    });
+
+    if (!postId || !content) {
+      console.error('Missing required fields:', { postId, content });
+      throw new Error('Post ID and content are required');
+    }
+
     try {
-      console.log('Updating post:', { 
-        postId: currentPostData._id, 
-        content: newContent,
-        currentIdea: currentPostData.idea 
-      });
+      const requestData = {
+        postId: postId.toString(),
+        content,
+        idea,
+        imagePrompt,
+        imageUrl,
+      };
+
+      console.log('Sending update request:', requestData);
       
       const response = await fetch('/api/v1/posts/update', {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({
-          postId: currentPostData._id.toString(),
-          content: newContent,
-        }),
+        body: JSON.stringify(requestData),
       });
 
       const responseData = await response.json();
@@ -44,10 +59,14 @@ export default function CampaignPost({ day, platform, postData, styles, onUpdate
 
       const updatedPost = {
         ...currentPostData,
-        idea: responseData.idea,
-        updatedAt: responseData.updatedAt
+        idea: idea || content,
+        content,
+        imagePrompt,
+        imageUrl,
+        updatedAt: new Date().toISOString()
       };
       
+      console.log('Updating post with:', updatedPost);
       setCurrentPostData(updatedPost);
       onUpdate?.(updatedPost);
       
@@ -59,7 +78,10 @@ export default function CampaignPost({ day, platform, postData, styles, onUpdate
   };
 
   return (
-    <div className="relative h-full group cursor-pointer hover:bg-gray-50">
+    <div 
+      className="relative h-full group cursor-pointer hover:bg-gray-50"
+      onClick={() => setIsEditModalOpen(true)}
+    >
       <div className={`absolute top-2 left-2 w-8 h-8 rounded-full flex items-center justify-center text-white text-sm ${styles.active} z-10`}>
         {day}
       </div>
@@ -71,15 +93,11 @@ export default function CampaignPost({ day, platform, postData, styles, onUpdate
           <div className="space-y-2 h-full flex flex-col">
             {currentPostData.imageUrl && (
               <div 
-                className="relative aspect-square w-full overflow-hidden rounded-lg flex-shrink-0 cursor-pointer"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setIsEditModalOpen(true);
-                }}
+                className="relative aspect-square w-full overflow-hidden rounded-lg flex-shrink-0 group"
               >
                 <img 
                   src={currentPostData.imageUrl} 
-                  alt={currentPostData.imagePrompt || 'Post image'}
+                  alt={currentPostData.imagePrompt || 'Generated image'} 
                   className="object-cover w-full h-full"
                   onError={(e) => {
                     console.error('Image failed to load:', currentPostData.imageUrl);
@@ -90,19 +108,12 @@ export default function CampaignPost({ day, platform, postData, styles, onUpdate
             )}
             
             <div className={`relative flex-grow min-h-0 ${isExpanded ? 'overflow-y-auto' : ''}`}>
-              <p 
-                className={`text-sm ${isExpanded ? '' : 'line-clamp-3'} ${styles.text}`}
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setIsExpanded(!isExpanded);
-                }}
-              >
-                {currentPostData.idea || 'No content available'}
+              <p className={`text-sm text-gray-900 ${!isExpanded && 'line-clamp-3'}`}>
+                {currentPostData.idea}
               </p>
-              
-              {!isExpanded && currentPostData.idea?.length > 150 && (
+              {currentPostData.idea?.length > 150 && !isExpanded && (
                 <div 
-                  className="absolute bottom-0 left-0 right-0 h-6 bg-gradient-to-t from-white to-transparent cursor-pointer"
+                  className="absolute bottom-0 left-0 right-0 h-6 bg-gradient-to-t from-white to-transparent"
                   onClick={(e) => {
                     e.stopPropagation();
                     setIsExpanded(true);
@@ -111,33 +122,25 @@ export default function CampaignPost({ day, platform, postData, styles, onUpdate
               )}
             </div>
 
-            {isExpanded && (
-              <button
-                className="text-xs text-blue-500 hover:text-blue-600 mt-1"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setIsExpanded(false);
-                }}
-              >
-                Show less
-              </button>
-            )}
-            
-            {currentPostData.imagePrompt && !currentPostData.imageUrl && (
-              <p className="text-xs text-gray-500 italic flex-shrink-0">
-                Image prompt: {currentPostData.imagePrompt}
-              </p>
-            )}
+            <div className="flex items-center justify-between mt-auto pt-2">
+              <div className="flex items-center space-x-2">
+                <span className="text-xs text-gray-500">
+                  {platform}
+                </span>
+              </div>
+            </div>
           </div>
         )}
       </div>
 
-      <EditPost
-        isOpen={isEditModalOpen}
-        onClose={() => setIsEditModalOpen(false)}
-        post={currentPostData}
-        onSave={handleSavePost}
-      />
+      {isEditModalOpen && (
+        <EditPost
+          isOpen={isEditModalOpen}
+          onClose={() => setIsEditModalOpen(false)}
+          post={currentPostData}
+          onSave={handleSavePost}
+        />
+      )}
     </div>
   );
 }

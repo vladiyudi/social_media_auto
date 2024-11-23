@@ -33,7 +33,7 @@ export async function PUT(request) {
     const body = await request.json();
     console.log('Received update request:', body);
 
-    const { postId, content } = body;
+    const { postId, content, imageUrl, imagePrompt } = body;
 
     if (!postId || !content) {
       console.log('Missing required fields:', { postId, content });
@@ -63,16 +63,28 @@ export async function PUT(request) {
       }
 
       // Update the post within the campaign
+      const updateFields = {
+        'generatedPosts.$.idea': content,
+        'generatedPosts.$.updatedAt': new Date()
+      };
+
+      // Only add imageUrl and imagePrompt if they are provided
+      if (imageUrl) {
+        updateFields['generatedPosts.$.imageUrl'] = imageUrl;
+      }
+      if (imagePrompt) {
+        updateFields['generatedPosts.$.imagePrompt'] = imagePrompt;
+      }
+
+      console.log('Updating with fields:', updateFields);
+
       const result = await Campaign.findOneAndUpdate(
         { 
           '_id': campaign._id,
           'generatedPosts._id': postId
         },
         { 
-          $set: { 
-            'generatedPosts.$.idea': content,
-            'generatedPosts.$.updatedAt': new Date()
-          } 
+          $set: updateFields
         },
         { 
           new: true, // Return the updated document
