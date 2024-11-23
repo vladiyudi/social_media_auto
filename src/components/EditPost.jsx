@@ -7,82 +7,103 @@ export default function EditPost({ isOpen, onClose, post, onSave }) {
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState('');
 
-  if (!isOpen) return null;
-
   const handleSave = async () => {
     try {
-      setError('');
       setIsSaving(true);
+      setError('');
       await onSave(content);
       onClose();
     } catch (error) {
-      console.error('Error saving post:', error);
-      setError('Failed to update post content');
+      setError(error.message || 'Failed to save changes');
     } finally {
       setIsSaving(false);
     }
   };
 
+  if (!isOpen) return null;
+
   return (
     <>
-      {/* Backdrop */}
       <div 
         className="fixed inset-0 bg-black/50 z-50"
         onClick={onClose}
       />
 
-      {/* Modal */}
-      <div className="fixed inset-0 z-50 flex items-center justify-center">
+      <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
         <div 
-          className="bg-white rounded-lg shadow-lg w-full max-w-3xl max-h-[90vh] overflow-hidden"
+          className="bg-white rounded-lg shadow-lg w-full max-w-md overflow-hidden"
           onClick={e => e.stopPropagation()}
         >
-          <div className="flex flex-col h-full">
-            {/* Header */}
-            <div className="p-4 border-b flex justify-between items-center">
-              <h2 className="text-xl font-semibold">Edit Post</h2>
-              {error && <p className="text-sm text-red-500">{error}</p>}
-            </div>
+          <div className="p-6">
+            <h3 className="text-lg font-medium text-gray-900 mb-4">
+              Edit Post
+            </h3>
 
-            {/* Content */}
-            <div className="flex-1 overflow-auto p-4 space-y-4">
-              {/* Image */}
+            {error && (
+              <div className="mb-4 p-2 text-sm text-red-600 bg-red-50 rounded">
+                {error}
+              </div>
+            )}
+
+            <div className="space-y-4">
               {post?.imageUrl && (
-                <div className="flex justify-center">
-                  <img
-                    src={post.imageUrl}
-                    alt={post.imagePrompt || 'Post image'}
-                    className="max-h-[50vh] object-contain"
-                    onError={(e) => {
-                      console.error('Image failed to load:', post.imageUrl);
-                      e.target.style.display = 'none';
-                    }}
-                  />
+                <div className="space-y-4">
+                  <div className="relative aspect-square w-full overflow-hidden rounded-lg">
+                    <img 
+                      src={post.imageUrl} 
+                      alt={post.imagePrompt || 'Post image'} 
+                      className="object-cover w-full h-full"
+                      onError={(e) => {
+                        console.error('Image failed to load:', post.imageUrl);
+                        e.target.style.display = 'none';
+                      }}
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <label htmlFor="imagePrompt" className="block text-sm font-medium text-gray-700">
+                      Image Prompt
+                    </label>
+                    <textarea
+                      id="imagePrompt"
+                      className="w-full px-3 py-2 text-sm text-gray-700 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+                      rows={2}
+                      value={post.imagePrompt || ''}
+                      readOnly
+                      placeholder="No image prompt available"
+                    />
+                  </div>
                 </div>
               )}
 
-              {/* Text Area */}
-              <textarea
-                value={content}
-                onChange={(e) => setContent(e.target.value)}
-                placeholder="Enter post content..."
-                className="min-h-[150px] w-full p-2 border rounded-md resize-none focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
+              <div className="space-y-1">
+                <label htmlFor="content" className="block text-sm font-medium text-gray-700">
+                  Post Content
+                </label>
+                <textarea
+                  id="content"
+                  className="w-full px-3 py-2 text-sm text-gray-700 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+                  rows={6}
+                  value={content}
+                  onChange={(e) => setContent(e.target.value)}
+                  placeholder="Enter post content..."
+                />
+              </div>
             </div>
 
-            {/* Footer */}
-            <div className="p-4 border-t flex justify-end space-x-2">
+            <div className="mt-6 flex justify-end space-x-3">
               <button
+                type="button"
+                className="inline-flex justify-center rounded-md border border-transparent bg-gray-100 px-4 py-2 text-sm font-medium text-gray-900 hover:bg-gray-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-gray-500 focus-visible:ring-offset-2"
                 onClick={onClose}
                 disabled={isSaving}
-                className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
               >
                 Cancel
               </button>
               <button
+                type="button"
+                className="inline-flex justify-center rounded-md border border-transparent bg-blue-100 px-4 py-2 text-sm font-medium text-blue-900 hover:bg-blue-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2"
                 onClick={handleSave}
                 disabled={isSaving}
-                className="px-4 py-2 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
               >
                 {isSaving ? 'Saving...' : 'Save Changes'}
               </button>
