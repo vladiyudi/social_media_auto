@@ -13,7 +13,9 @@ const postSchema = new mongoose.Schema({
     required: true 
   },
   idea: { type: String, required: true },
-  imagePrompt: { type: String, required: true }
+  imagePrompt: { type: String, required: true },
+  imageUrl: { type: String },
+  content: { type: String }
 });
 
 const campaignSchema = new mongoose.Schema({

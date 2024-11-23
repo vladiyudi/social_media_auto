@@ -4,6 +4,7 @@ import { authOptions } from '../auth/[...nextauth]/route';
 import { Campaign } from '@/lib/db/models/campaign';
 import mongoose from 'mongoose';
 import { generateCampaignIdeas } from '@/lib/services/ai/claude';
+import { generateImage } from '@/lib/services/falAi';
 
 // Connect to MongoDB
 const connectDB = async () => {
@@ -72,17 +73,41 @@ export async function POST(request) {
       platforms: data.platforms
     });
 
-    // Create campaign with generated ideas
+    // Generate images for posts with ImagePrompt
+    console.log('Starting image generation for posts:', campaignIdeas.posts);
+    
+    const postsWithImages = await Promise.all(
+      campaignIdeas.posts.map(async (post) => {
+        if (post.imagePrompt) {
+          try {
+            console.log('Generating image for prompt:', post.imagePrompt);
+            const imageUrl = await generateImage(post.imagePrompt);
+            console.log('Generated image URL:', imageUrl);
+            return { ...post, imageUrl };
+          } catch (error) {
+            console.error('Error generating image for post:', error);
+            return post;
+          }
+        }
+        return post;
+      })
+    );
+
+    console.log('Posts with images:', postsWithImages);
+
+    // Create campaign with generated ideas and images
     const campaign = await Campaign.create({
       ...data,
       userId: session.user.email,
-      generatedPosts: campaignIdeas.posts // Store the generated posts
+      generatedPosts: postsWithImages
     });
+
+    console.log('Created campaign:', campaign);
 
     // Return both campaign and generated posts
     return NextResponse.json({
       campaign,
-      generatedPosts: campaignIdeas.posts
+      generatedPosts: postsWithImages
     });
 
   } catch (error) {
