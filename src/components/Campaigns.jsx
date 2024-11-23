@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import Campaign from './Campaign';
 import CreateCampaign from './CreateCampaign';
+import { triggerConfetti } from './ui/confetti';
 
 export default function Campaigns() {
   const [campaigns, setCampaigns] = useState([]);
@@ -64,6 +65,9 @@ export default function Campaigns() {
       setCampaigns(prev => prev.map(camp => 
         camp._id === tempCampaign._id ? { ...newCampaign, isLoading: false } : camp
       ));
+      
+      // Trigger confetti after successful campaign creation
+      triggerConfetti();
     } catch (error) {
       console.error('Error creating campaign:', error);
       setError('Failed to create campaign');
