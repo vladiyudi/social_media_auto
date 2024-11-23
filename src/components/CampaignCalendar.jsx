@@ -129,10 +129,13 @@ export default function CampaignCalendar({ campaign, platform }) {
       );
     }
 
-    // Add empty cells for days after the last day of the month if needed
-    const totalCells = days.length;
-    if (totalCells < 42) { // 6 rows * 7 days = 42 total cells
-      for (let i = 0; i < (42 - totalCells); i++) {
+    // Calculate how many empty cells we need to add to complete the last row
+    const totalDays = firstDayOfMonth + daysInMonth;
+    const remainingCells = 7 - (totalDays % 7);
+    
+    // Only add empty cells if we need to complete the last row
+    if (remainingCells < 7) {
+      for (let i = 0; i < remainingCells; i++) {
         days.push(
           <div key={`empty-end-${i}`} className="min-h-[150px] border-t border-l first:border-l-0"></div>
         );
