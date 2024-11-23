@@ -56,11 +56,15 @@ export default function CreateCampaign({ onClose, onCampaignCreated }) {
       return;
     }
 
+    // Ensure dates are in ISO format
+    const formattedStartDate = new Date(startDate + 'T00:00:00Z').toISOString();
+    const formattedEndDate = new Date(endDate + 'T00:00:00Z').toISOString();
+
     const formData = {
       name,
       description,
-      startDate,  
-      endDate,
+      startDate: formattedStartDate,
+      endDate: formattedEndDate,
       platforms: selectedPlatforms,
       connection: selectedConnection
     };

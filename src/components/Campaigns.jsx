@@ -57,6 +57,7 @@ export default function Campaigns() {
       }
 
       const data = await response.json();
+
       const newCampaign = data.campaign;
       
       // Replace the temporary campaign with the real one

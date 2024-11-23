@@ -41,7 +41,7 @@ export default function LoginPage() {
       <div className="max-w-md w-full space-y-8 p-10 bg-card rounded-xl shadow-lg">
         <div>
           <h2 className="mt-6 text-center text-3xl font-bold text-foreground">
-            KNBL Social Media 
+            KNBL SMA
           </h2>
         </div>
         <div className="mt-8 space-y-6">

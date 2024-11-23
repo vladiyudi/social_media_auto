@@ -63,24 +63,39 @@ export async function POST(request) {
     }
 
     const data = await request.json();
-    await connectDB();
-
-  
-    const campaignIdeas = await generateCampaignIdeas({
-      description: data.description,
+    console.log('Received campaign data:', {
       startDate: data.startDate,
       endDate: data.endDate,
       platforms: data.platforms
     });
 
+    await connectDB();
+
+    // Convert dates to proper ISO strings
+    const startDate = new Date(data.startDate);
+    const endDate = new Date(data.endDate);
+    console.log('Converted dates:', {
+      startDate: startDate.toISOString(),
+      endDate: endDate.toISOString()
+    });
+
+    const campaignIdeas = await generateCampaignIdeas({
+      description: data.description,
+      startDate: startDate.toISOString(),
+      endDate: endDate.toISOString(),
+      platforms: data.platforms
+    });
+
+    console.log('Generated posts dates:', campaignIdeas.posts.map(post => ({
+      date: new Date(post.date).toISOString(),
+      platform: post.platform
+    })));
     
     const postsWithImages = await Promise.all(
       campaignIdeas.posts.map(async (post) => {
         if (post.imagePrompt) {
           try {
-            console.log('Generating image for prompt:', post.imagePrompt);
             const imageUrl = await generateImage(post.imagePrompt);
-            console.log('Generated image URL:', imageUrl);
             return { ...post, imageUrl };
           } catch (error) {
             console.error('Error generating image for post:', error);
@@ -91,27 +106,25 @@ export async function POST(request) {
       })
     );
 
-
-
     // Create campaign with generated ideas and images
     const campaign = await Campaign.create({
       ...data,
+      startDate: startDate,
+      endDate: endDate,
       userId: session.user.email,
       generatedPosts: postsWithImages
     });
 
-    console.log('Created campaign:', campaign);
+    console.log('Created campaign with posts:', campaign.generatedPosts.map(post => ({
+      date: new Date(post.date).toISOString(),
+      platform: post.platform
+    })));
 
-    // Return both campaign and generated posts
-    return NextResponse.json({
-      campaign,
-      generatedPosts: postsWithImages
-    });
-
+    return NextResponse.json({ campaign });
   } catch (error) {
     console.error('Error creating campaign:', error);
     return NextResponse.json(
-      { error: error.message || 'Internal Server Error' },
+      { error: 'Internal Server Error' },
       { status: 500 }
     );
   }

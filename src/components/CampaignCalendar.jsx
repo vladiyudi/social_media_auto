@@ -28,6 +28,8 @@ const platformStyles = {
 };
 
 export default function CampaignCalendar({ campaign, platform }) {
+
+
   const [currentDate, setCurrentDate] = useState(new Date());
 
   // Return early if no platform is selected
@@ -55,21 +57,26 @@ export default function CampaignCalendar({ campaign, platform }) {
 
   const isDateInCampaign = (date) => {
     if (!campaign?.startDate || !campaign?.endDate) return false;
-    const campaignStart = new Date(campaign.startDate);
-    const campaignEnd = new Date(campaign.endDate);
-    return date >= campaignStart && date <= campaignEnd;
+    
+    // Create dates using the date string only (YYYY-MM-DD)
+    const campaignStart = new Date(new Date(campaign.startDate).toISOString().split('T')[0]);
+    const campaignEnd = new Date(new Date(campaign.endDate).toISOString().split('T')[0]);
+    const compareDate = new Date(date.toISOString().split('T')[0]);
+    
+    return compareDate >= campaignStart && compareDate <= campaignEnd;
   };
 
   const getPostForDate = (date) => {
     if (!campaign.generatedPosts) return null;
     
-    // Convert date to YYYY-MM-DD format for comparison
+    // Get just the date part (YYYY-MM-DD)
     const dateStr = date.toISOString().split('T')[0];
     
     // Find post for this date and platform
     return campaign.generatedPosts.find(post => {
-      const postDate = new Date(post.date).toISOString().split('T')[0];
-      return postDate === dateStr && post.platform === platform;
+      // Get just the date part from the post date
+      const postDateStr = new Date(post.date).toISOString().split('T')[0];
+      return postDateStr === dateStr && post.platform === platform;
     });
   };
 
@@ -87,11 +94,13 @@ export default function CampaignCalendar({ campaign, platform }) {
 
     // Add cells for each day of the month
     for (let day = 1; day <= daysInMonth; day++) {
-      const date = new Date(
+      // Create date at midnight UTC
+      const date = new Date(Date.UTC(
         currentDate.getFullYear(),
         currentDate.getMonth(),
         day
-      );
+      ));
+      
       const isInCampaign = isDateInCampaign(date);
       const styles = platformStyles[platform] || platformStyles.facebook;
 
