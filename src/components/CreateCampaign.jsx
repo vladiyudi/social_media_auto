@@ -51,51 +51,33 @@ export default function CreateCampaign({ onClose, onCampaignCreated }) {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    
+    if (!validateForm()) {
+      return;
+    }
+
+    const formData = {
+      name,
+      description,
+      startDate,  
+      endDate,
+      platforms: selectedPlatforms,
+      connection: selectedConnection
+    };
+
+    onCampaignCreated(formData);
+  };
+
+  const validateForm = () => {
     if (!selectedConnection) {
       setError('Please select a connection');
-      return;
+      return false;
     }
     if (selectedPlatforms.length === 0) {
       setError('Please select at least one platform');
-      return;
+      return false;
     }
-
-    const connection = connections.find(conn => conn.name_connection === selectedConnection);
-    const platformWebhooks = {};
-    selectedPlatforms.forEach(platform => {
-      platformWebhooks[platform] = connection[platform];
-    });
-
-    const campaign = {
-      name,
-      description,
-      startDate,
-      endDate,
-      connection: selectedConnection,
-      platforms: selectedPlatforms,
-      platformWebhooks,
-    };
-
-    try {
-      const response = await fetch('/api/campaigns', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(campaign),
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to create campaign');
-      }
-
-      const data = await response.json();
-      onCampaignCreated(data);
-      onClose();
-    } catch (err) {
-      setError('Failed to create campaign');
-      console.error('Error creating campaign:', err);
-    }
+    return true;
   };
 
   return (

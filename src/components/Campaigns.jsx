@@ -7,6 +7,7 @@ import CreateCampaign from './CreateCampaign';
 export default function Campaigns() {
   const [campaigns, setCampaigns] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [creatingCampaign, setCreatingCampaign] = useState(false);
   const [error, setError] = useState(null);
   const [showCreateModal, setShowCreateModal] = useState(false);
 
@@ -28,10 +29,32 @@ export default function Campaigns() {
     fetchCampaigns();
   }, []);
 
-  const handleCampaignCreated = (newCampaignData) => {
-    // Extract just the campaign data from the response
-    const newCampaign = newCampaignData.campaign || newCampaignData;
-    setCampaigns(prev => [newCampaign, ...prev]);
+  const handleCampaignCreated = async (newCampaignData) => {
+    setCreatingCampaign(true);
+    setShowCreateModal(false);
+    
+    try {
+      const response = await fetch('/api/campaigns', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(newCampaignData),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to create campaign');
+      }
+
+      const data = await response.json();
+      const newCampaign = data.campaign || data;
+      setCampaigns(prev => [newCampaign, ...prev]);
+    } catch (error) {
+      console.error('Error creating campaign:', error);
+      setError('Failed to create campaign');
+    } finally {
+      setCreatingCampaign(false);
+    }
   };
 
   const handleCampaignDelete = async (id) => {
@@ -91,6 +114,7 @@ export default function Campaigns() {
           platforms={campaign.platforms}
           connection={campaign.connection}
           onDelete={() => handleCampaignDelete(campaign._id)}
+          isLoading={creatingCampaign && campaigns[0]?._id === campaign._id}
         />
       ))}
 

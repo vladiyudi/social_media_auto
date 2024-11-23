@@ -23,7 +23,8 @@ export default function Campaign({
   endDate, 
   platforms,
   connection,
-  onDelete 
+  onDelete,
+  isLoading 
 }) {
   const router = useRouter();
   const [deleteState, setDeleteState] = useState(false);
@@ -59,10 +60,15 @@ export default function Campaign({
 
   return (
     <div 
-      className="aspect-square bg-card border border-border rounded-lg overflow-hidden shadow-lg hover:shadow-xl transition-shadow cursor-pointer relative group"
+      className={`aspect-square bg-card border border-border rounded-lg overflow-hidden shadow-lg hover:shadow-xl transition-shadow cursor-pointer relative group ${isLoading ? 'opacity-50' : ''}`}
       onMouseLeave={handleMouseLeave}
       onClick={handleClick}
     >
+      {isLoading && (
+        <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-20 z-20">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+        </div>
+      )}
       <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-all z-10">
         <Button
           variant={deleteState ? "destructive" : "ghost"}
