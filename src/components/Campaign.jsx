@@ -47,7 +47,9 @@ export default function Campaign({
   };
 
   const handleClick = () => {
-    router.push(`/campaign/${id}`);
+    if (!isLoading) {
+      router.push(`/campaign/${id}`);
+    }
   };
 
   const formatDate = (date) => {
@@ -60,29 +62,34 @@ export default function Campaign({
 
   return (
     <div 
-      className={`aspect-square bg-card border border-border rounded-lg overflow-hidden shadow-lg hover:shadow-xl transition-shadow cursor-pointer relative group ${isLoading ? 'opacity-50' : ''}`}
+      className={`aspect-square bg-card border border-border rounded-lg overflow-hidden shadow-lg transition-shadow relative group
+        ${!isLoading && 'hover:shadow-xl cursor-pointer'}
+        ${isLoading && 'opacity-75'}`}
       onMouseLeave={handleMouseLeave}
       onClick={handleClick}
     >
       {isLoading && (
-        <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-20 z-20">
+        <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-10 z-20">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
         </div>
       )}
-      <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-all z-10">
-        <Button
-          variant={deleteState ? "destructive" : "ghost"}
-          size="sm"
-          className={`h-8 ${deleteState ? 'min-w-[4rem]' : 'w-8'} hover:bg-${deleteState ? 'destructive/90' : 'background/90'} hover:text-${deleteState ? 'destructive-foreground' : 'foreground'}`}
-          onClick={handleDelete}
-        >
-          {deleteState ? (
-            <span className="text-sm font-medium">really?</span>
-          ) : (
-            <Cross className="h-4 w-4" />
-          )}
-        </Button>
-      </div>
+
+      {!isLoading && (
+        <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-all z-10">
+          <Button
+            variant={deleteState ? "destructive" : "ghost"}
+            size="sm"
+            className={`h-8 ${deleteState ? 'min-w-[4rem]' : 'w-8'} hover:bg-${deleteState ? 'destructive/90' : 'background/90'} hover:text-${deleteState ? 'destructive-foreground' : 'foreground'}`}
+            onClick={handleDelete}
+          >
+            {deleteState ? (
+              <span className="text-sm font-medium">really?</span>
+            ) : (
+              <Cross className="h-4 w-4" />
+            )}
+          </Button>
+        </div>
+      )}
 
       <div className="p-4 h-full flex flex-col">
         <div className="flex items-center gap-2 mb-2 text-muted-foreground">

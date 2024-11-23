@@ -73,8 +73,6 @@ export async function POST(request) {
       platforms: data.platforms
     });
 
-    // Generate images for posts with ImagePrompt
-    console.log('Starting image generation for posts:', campaignIdeas.posts);
     
     const postsWithImages = await Promise.all(
       campaignIdeas.posts.map(async (post) => {
@@ -93,7 +91,7 @@ export async function POST(request) {
       })
     );
 
-    console.log('Posts with images:', postsWithImages);
+
 
     // Create campaign with generated ideas and images
     const campaign = await Campaign.create({

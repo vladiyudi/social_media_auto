@@ -10,6 +10,7 @@ export default function Campaigns() {
   const [creatingCampaign, setCreatingCampaign] = useState(false);
   const [error, setError] = useState(null);
   const [showCreateModal, setShowCreateModal] = useState(false);
+  const [newCampaignId, setNewCampaignId] = useState(null);
 
   const fetchCampaigns = async () => {
     try {
@@ -29,17 +30,26 @@ export default function Campaigns() {
     fetchCampaigns();
   }, []);
 
-  const handleCampaignCreated = async (newCampaignData) => {
+  const handleCampaignCreated = async (formData) => {
     setCreatingCampaign(true);
     setShowCreateModal(false);
     
+    // Create a temporary campaign object for loading state
+    const tempCampaign = {
+      _id: 'temp-' + Date.now(),
+      ...formData,
+      isLoading: true
+    };
+    setCampaigns(prev => [tempCampaign, ...prev]);
+    setNewCampaignId(tempCampaign._id);
+
     try {
       const response = await fetch('/api/campaigns', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(newCampaignData),
+        body: JSON.stringify(formData),
       });
 
       if (!response.ok) {
@@ -47,13 +57,20 @@ export default function Campaigns() {
       }
 
       const data = await response.json();
-      const newCampaign = data.campaign || data;
-      setCampaigns(prev => [newCampaign, ...prev]);
+      const newCampaign = data.campaign;
+      
+      // Replace the temporary campaign with the real one
+      setCampaigns(prev => prev.map(camp => 
+        camp._id === tempCampaign._id ? { ...newCampaign, isLoading: false } : camp
+      ));
     } catch (error) {
       console.error('Error creating campaign:', error);
       setError('Failed to create campaign');
+      // Remove the temporary campaign on error
+      setCampaigns(prev => prev.filter(camp => camp._id !== tempCampaign._id));
     } finally {
       setCreatingCampaign(false);
+      setNewCampaignId(null);
     }
   };
 
@@ -83,14 +100,6 @@ export default function Campaigns() {
     );
   }
 
-  if (error) {
-    return (
-      <div className="flex items-center justify-center h-64">
-        <p className="text-destructive">{error}</p>
-      </div>
-    );
-  }
-
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 p-4">
       <div className="aspect-square">
@@ -114,7 +123,7 @@ export default function Campaigns() {
           platforms={campaign.platforms}
           connection={campaign.connection}
           onDelete={() => handleCampaignDelete(campaign._id)}
-          isLoading={creatingCampaign && campaigns[0]?._id === campaign._id}
+          isLoading={campaign.isLoading}
         />
       ))}
 
