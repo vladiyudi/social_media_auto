@@ -60,14 +60,17 @@ export default function CampaignCalendar({ campaign, platform }) {
     return date >= campaignStart && date <= campaignEnd;
   };
 
-  const getPlatformPostData = (date) => {
-    if (isDateInCampaign(date)) {
-      return {
-        platform,
-        date,
-      };
-    }
-    return null;
+  const getPostForDate = (date) => {
+    if (!campaign.generatedPosts) return null;
+    
+    // Convert date to YYYY-MM-DD format for comparison
+    const dateStr = date.toISOString().split('T')[0];
+    
+    // Find post for this date and platform
+    return campaign.generatedPosts.find(post => {
+      const postDate = new Date(post.date).toISOString().split('T')[0];
+      return postDate === dateStr && post.platform === platform;
+    });
   };
 
   const renderCalendar = () => {
@@ -78,7 +81,7 @@ export default function CampaignCalendar({ campaign, platform }) {
     // Add empty cells for days before the first day of the month
     for (let i = 0; i < firstDayOfMonth; i++) {
       days.push(
-        <div key={`empty-${i}`} className="min-h-[150px] border-t border-l first:border-l-0"></div>
+        <div key={`empty-start-${i}`} className="min-h-[150px] border-t border-l first:border-l-0"></div>
       );
     }
 
@@ -90,28 +93,41 @@ export default function CampaignCalendar({ campaign, platform }) {
         day
       );
       const isInCampaign = isDateInCampaign(date);
-      const postData = getPlatformPostData(date);
-      const styles = platformStyles[platform] || platformStyles.facebook; // Fallback to facebook styles
+      const styles = platformStyles[platform] || platformStyles.facebook;
+
+      // Get post data for this date if it exists
+      const post = isInCampaign ? getPostForDate(date) : null;
 
       days.push(
         <div
-          key={day}
+          key={`day-${currentDate.getFullYear()}-${currentDate.getMonth()}-${day}`}
           className={`min-h-[150px] border-t border-l first:border-l-0 ${
             isInCampaign ? styles.highlight : ''
           }`}
         >
           {isInCampaign ? (
             <CampaignPost 
+              key={`post-${platform}-${day}`}
               day={day} 
               platform={platform} 
-              postData={postData}
+              postData={post}
               styles={styles}
             />
           ) : (
-            <div className="p-2 text-sm text-gray-400">{day}</div>
+            <div key={`empty-${day}`} className="p-2 text-sm text-gray-400">{day}</div>
           )}
         </div>
       );
+    }
+
+    // Add empty cells for days after the last day of the month if needed
+    const totalCells = days.length;
+    if (totalCells < 42) { // 6 rows * 7 days = 42 total cells
+      for (let i = 0; i < (42 - totalCells); i++) {
+        days.push(
+          <div key={`empty-end-${i}`} className="min-h-[150px] border-t border-l first:border-l-0"></div>
+        );
+      }
     }
 
     return days;

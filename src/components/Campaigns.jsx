@@ -28,7 +28,9 @@ export default function Campaigns() {
     fetchCampaigns();
   }, []);
 
-  const handleCampaignCreated = (newCampaign) => {
+  const handleCampaignCreated = (newCampaignData) => {
+    // Extract just the campaign data from the response
+    const newCampaign = newCampaignData.campaign || newCampaignData;
     setCampaigns(prev => [newCampaign, ...prev]);
   };
 

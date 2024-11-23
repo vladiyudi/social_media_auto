@@ -3,6 +3,7 @@ import { getServerSession } from 'next-auth';
 import { authOptions } from '../auth/[...nextauth]/route';
 import { Campaign } from '@/lib/db/models/campaign';
 import mongoose from 'mongoose';
+import { generateCampaignIdeas } from '@/lib/services/ai/claude';
 
 // Connect to MongoDB
 const connectDB = async () => {
@@ -63,12 +64,27 @@ export async function POST(request) {
     const data = await request.json();
     await connectDB();
 
-    const campaign = await Campaign.create({
-      ...data,
-      userId: session.user.email // Using email as userId since it's unique and always available
+  
+    const campaignIdeas = await generateCampaignIdeas({
+      description: data.description,
+      startDate: data.startDate,
+      endDate: data.endDate,
+      platforms: data.platforms
     });
 
-    return NextResponse.json(campaign);
+    // Create campaign with generated ideas
+    const campaign = await Campaign.create({
+      ...data,
+      userId: session.user.email,
+      generatedPosts: campaignIdeas.posts // Store the generated posts
+    });
+
+    // Return both campaign and generated posts
+    return NextResponse.json({
+      campaign,
+      generatedPosts: campaignIdeas.posts
+    });
+
   } catch (error) {
     console.error('Error creating campaign:', error);
     return NextResponse.json(

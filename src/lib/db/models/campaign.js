@@ -5,6 +5,17 @@ if (mongoose.models.Campaign) {
   delete mongoose.models.Campaign;
 }
 
+const postSchema = new mongoose.Schema({
+  date: { type: Date, required: true },
+  platform: { 
+    type: String,
+    enum: ['facebook', 'instagram', 'twitter', 'linkedin'],
+    required: true 
+  },
+  idea: { type: String, required: true },
+  imagePrompt: { type: String, required: true }
+});
+
 const campaignSchema = new mongoose.Schema({
   userId: { type: String, required: true },
   name: { type: String, required: true },
@@ -17,6 +28,7 @@ const campaignSchema = new mongoose.Schema({
     enum: ['facebook', 'instagram', 'twitter', 'linkedin'],
     required: true
   }],
+  generatedPosts: [postSchema], 
   createdAt: { type: Date, default: Date.now },
   updatedAt: { type: Date, default: Date.now }
 });

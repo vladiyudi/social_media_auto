@@ -8,8 +8,8 @@ export default function CampaignPost({ day, platform, postData, styles }) {
       </div>
       <div className="pt-6">
         <div className="w-full aspect-square bg-gray-200 rounded-lg mb-2"></div>
-        <p className={`text-sm truncate ${styles.text}`}>
-          {platform === 'facebook' ? 'Facebook Post' : 'Instagram Post'} #{day}
+        <p className={`text-sm line-clamp-2 ${styles.text}`}>
+          {postData?.idea || `No content for ${platform} post #${day}`}
         </p>
       </div>
     </div>
