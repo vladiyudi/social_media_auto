@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import Image from 'next/image';
 import EditPost from './EditPost';
 
 export default function CampaignPost({ day, platform, postData, styles, onUpdate }) {
@@ -95,10 +96,12 @@ export default function CampaignPost({ day, platform, postData, styles, onUpdate
               <div 
                 className="relative aspect-square w-full overflow-hidden rounded-lg flex-shrink-0 group"
               >
-                <img 
+                <Image 
                   src={currentPostData.imageUrl} 
                   alt={currentPostData.imagePrompt || 'Generated image'} 
-                  className="object-cover w-full h-full"
+                  className="object-cover"
+                  fill
+                  sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
                   onError={(e) => {
                     console.error('Image failed to load:', currentPostData.imageUrl);
                     e.target.style.display = 'none';

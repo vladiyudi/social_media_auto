@@ -1,0 +1,25 @@
+runtime: nodejs20
+env: flex
+
+env_variables:
+  NEXT_PUBLIC_CONNECTIONS: ${NEXT_PUBLIC_CONNECTIONS}
+  MONGODB_URI: ${MONGODB_URI}
+  GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID}
+  GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET}
+  NEXTAUTH_URL: ${NEXTAUTH_URL}
+  NEXTAUTH_SECRET: ${NEXTAUTH_SECRET}
+  CLAUDE_API_KEY: ${CLAUDE_API_KEY}
+  FAL_AI_KEY: ${FAL_AI_KEY}
+
+automatic_scaling:
+  target_cpu_utilization: 0.65
+  min_instances: 1
+  max_instances: 10
+
+resources:
+  cpu: 1
+  memory_gb: 1
+  disk_size_gb: 10
+
+network:
+  session_affinity: true

@@ -2,13 +2,13 @@ import React, { useEffect, useRef } from "react";
 
 export const AnimatedBeam = ({
   containerRef,
-  nodes,
+  nodes = [],
   centerRef,
 }) => {
   const canvasRef = useRef(null);
 
   useEffect(() => {
-    if (!containerRef.current || !canvasRef.current || !centerRef.current) return;
+    if (!containerRef?.current || !canvasRef?.current || !centerRef?.current || !nodes?.length) return;
 
     const canvas = canvasRef.current;
     const container = containerRef.current;
@@ -71,18 +71,23 @@ export const AnimatedBeam = ({
     };
 
     const animate = () => {
+      if (!container || !center) return;
+      
       ctx.clearRect(0, 0, canvas.width, canvas.height);
       progress += 0.005;
 
       const centerRect = center.getBoundingClientRect();
-      const centerX = centerRect.left - container.getBoundingClientRect().left + centerRect.width / 2;
-      const centerY = centerRect.top - container.getBoundingClientRect().top + centerRect.height / 2;
+      const containerRect = container.getBoundingClientRect();
+      
+      const centerX = centerRect.left - containerRect.left + centerRect.width / 2;
+      const centerY = centerRect.top - containerRect.top + centerRect.height / 2;
 
       nodes.forEach(node => {
-        if (!node.ref.current) return;
+        if (!node?.ref?.current) return;
+        
         const rect = node.ref.current.getBoundingClientRect();
-        const startX = rect.left - container.getBoundingClientRect().left + rect.width / 2;
-        const startY = rect.top - container.getBoundingClientRect().top + rect.height / 2;
+        const startX = rect.left - containerRect.left + rect.width / 2;
+        const startY = rect.top - containerRect.top + rect.height / 2;
         
         const isLeft = startX < centerX;
         drawBeam(startX, startY, centerX, centerY, progress + Math.random(), isLeft);
