@@ -1,18 +1,23 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  output: 'standalone',
+  env: {
+    PORT: process.env.PORT || '8080'
+  },
+  experimental: {
+    serverActions: true,
+  },
   images: {
-    domains: ['storage.googleapis.com', 'res.cloudinary.com'],
     remotePatterns: [
       {
         protocol: 'https',
-        hostname: '**',
+        hostname: 'lh3.googleusercontent.com',
       },
+      {
+        protocol: 'https',
+        hostname: 'fal.media',
+      }
     ],
-  },
-  experimental: {
-    serverActions: {
-      allowedOrigins: ['localhost:3000'],
-    },
   },
 }
 

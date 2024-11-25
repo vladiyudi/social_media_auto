@@ -1,7 +1,7 @@
 export function getConnectionName(connectionId) {
   try {
-    const connections = JSON.parse(process.env.NEXT_PUBLIC_CONNECTIONS || '[]');
-    const connection = connections.find(conn => 
+    const data = JSON.parse(process.env.NEXT_PUBLIC_CONNECTIONS || '{"connections":[]}');
+    const connection = data.connections.find(conn => 
       Object.values(conn).some(value => value === connectionId)
     );
     return connection ? connection.name_connection : connectionId;

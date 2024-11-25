@@ -16,8 +16,8 @@ export default function CreateCampaign({ onClose, onCampaignCreated }) {
   useEffect(() => {
     const fetchConnections = () => {
       try {
-        const connectionsData = JSON.parse(process.env.NEXT_PUBLIC_CONNECTIONS || '[]');
-        setConnections(connectionsData);
+        const data = JSON.parse(process.env.NEXT_PUBLIC_CONNECTIONS || '{"connections":[]}');
+        setConnections(data.connections);
       } catch (err) {
         setError('Failed to load connections');
         console.error('Error loading connections:', err);
