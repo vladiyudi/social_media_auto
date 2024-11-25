@@ -4,11 +4,14 @@ FROM node:20-alpine AS builder
 # Create app directory
 WORKDIR /app
 
+# Install sharp explicitly
+RUN apk add --no-cache python3 make g++ vips-dev
+
 # Copy package files first for better caching
 COPY package*.json ./
 
 # Install dependencies including sharp
-RUN npm install --legacy-peer-deps
+RUN npm install --legacy-peer-deps sharp
 
 # Copy local code to container
 COPY . .
@@ -27,6 +30,10 @@ FROM node:20-alpine AS runner
 
 WORKDIR /app
 
+# Install sharp in the production image
+RUN apk add --no-cache vips-dev
+RUN npm install --platform=linuxmusl --arch=x64 sharp
+
 RUN addgroup --system --gid 1001 nodejs
 RUN adduser --system --uid 1001 nextjs
 
@@ -41,6 +48,9 @@ COPY --from=builder /app/.next/server ./.next/server
 COPY --from=builder /app/.next/static ./.next/static
 COPY --from=builder /app/.next/types ./.next/types
 COPY --from=builder /app/node_modules ./node_modules
+
+# Create cache directory and set permissions
+RUN mkdir -p .next/cache && chown -R nextjs:nodejs .next
 
 USER nextjs
 

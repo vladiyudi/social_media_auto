@@ -5,7 +5,9 @@ const nextConfig = {
     PORT: process.env.PORT || '8080'
   },
   experimental: {
-    serverActions: true,
+    serverActions: {
+      allowedOrigins: ['localhost:3000', 'localhost:8080']
+    }
   },
   images: {
     remotePatterns: [
@@ -16,8 +18,14 @@ const nextConfig = {
       {
         protocol: 'https',
         hostname: 'fal.media',
+      },
+      {
+        protocol: 'https',
+        hostname: 'storage.googleapis.com',
+        pathname: '/knbl-sma/**',
       }
     ],
+    unoptimized: true
   },
 }
 
