@@ -63,21 +63,13 @@ export async function POST(request) {
     }
 
     const data = await request.json();
-    console.log('Received campaign data:', {
-      startDate: data.startDate,
-      endDate: data.endDate,
-      platforms: data.platforms
-    });
 
     await connectDB();
 
     // Convert dates to proper ISO strings
     const startDate = new Date(data.startDate);
     const endDate = new Date(data.endDate);
-    console.log('Converted dates:', {
-      startDate: startDate.toISOString(),
-      endDate: endDate.toISOString()
-    });
+ 
 
     const campaignIdeas = await generateCampaignIdeas({
       description: data.description,
@@ -86,10 +78,6 @@ export async function POST(request) {
       platforms: data.platforms
     });
 
-    console.log('Generated posts dates:', campaignIdeas.posts.map(post => ({
-      date: new Date(post.date).toISOString(),
-      platform: post.platform
-    })));
     
     let postsWithImages;
     if (data.includeImages) {
@@ -98,7 +86,7 @@ export async function POST(request) {
         campaignIdeas.posts.map(async (post) => {
           if (post.imagePrompt) {
             try {
-              const imageUrl = await generateImage(post.imagePrompt);
+              const imageUrl = await generateImage(post.imagePrompt, post.platform);
               return { ...post, imageUrl };
             } catch (error) {
               console.error('Error generating image for post:', error);
@@ -126,10 +114,6 @@ export async function POST(request) {
       generatedPosts: postsWithImages
     });
 
-    console.log('Created campaign with posts:', campaign.generatedPosts.map(post => ({
-      date: new Date(post.date).toISOString(),
-      platform: post.platform
-    })));
 
     return NextResponse.json({ campaign });
   } catch (error) {

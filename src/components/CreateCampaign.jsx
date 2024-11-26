@@ -15,7 +15,7 @@ export default function CreateCampaign({ onClose, onCampaignCreated }) {
   const [availablePlatforms, setAvailablePlatforms] = useState([]);
   const [selectedPlatforms, setSelectedPlatforms] = useState([]);
   const [error, setError] = useState('');
-  const [includeImages, setIncludeImages] = useState(false);
+  const [includeImages, setIncludeImages] = useState(true);
 
   useEffect(() => {
     const fetchConnections = () => {
@@ -159,44 +159,48 @@ export default function CreateCampaign({ onClose, onCampaignCreated }) {
           </div>
 
           {selectedConnection && availablePlatforms.length > 0 && (
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Platforms
-              </label>
-              <div className="space-y-2">
-                {availablePlatforms.map((platform) => (
-                  <label key={platform} className="flex items-center">
-                    <input
-                      type="checkbox"
-                      checked={selectedPlatforms.includes(platform)}
-                      onChange={() => handlePlatformToggle(platform)}
-                      className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+            <div className="flex justify-between items-start space-x-4">
+              <div className="flex-1">
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Platforms
+                </label>
+                <div className="space-y-2">
+                  {availablePlatforms.map((platform) => (
+                    <label key={platform} className="flex items-center">
+                      <input
+                        type="checkbox"
+                        checked={selectedPlatforms.includes(platform)}
+                        onChange={() => handlePlatformToggle(platform)}
+                        className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                      />
+                      <span className="ml-2 text-sm text-gray-700 capitalize">{platform}</span>
+                    </label>
+                  ))}
+                </div>
+              </div>
+              
+              <div className="mt-8">
+                <div className="flex items-center space-x-2">
+                  <button
+                    type="button"
+                    role="switch"
+                    aria-checked={includeImages}
+                    onClick={() => setIncludeImages(!includeImages)}
+                    className={`${
+                      includeImages ? 'bg-blue-600' : 'bg-gray-200'
+                    } relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2`}
+                  >
+                    <span
+                      className={`${
+                        includeImages ? 'translate-x-6' : 'translate-x-1'
+                      } inline-block h-4 w-4 transform rounded-full bg-white transition-transform duration-200 ease-in-out`}
                     />
-                    <span className="ml-2 text-sm text-gray-700 capitalize">{platform}</span>
-                  </label>
-                ))}
+                  </button>
+                  <span className="text-sm font-medium text-gray-700">Include Images</span>
+                </div>
               </div>
             </div>
           )}
-
-          <div className="flex items-center space-x-2">
-            <button
-              type="button"
-              role="switch"
-              aria-checked={includeImages}
-              onClick={() => setIncludeImages(!includeImages)}
-              className={`${
-                includeImages ? 'bg-blue-600' : 'bg-gray-200'
-              } relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2`}
-            >
-              <span
-                className={`${
-                  includeImages ? 'translate-x-6' : 'translate-x-1'
-                } inline-block h-4 w-4 transform rounded-full bg-white transition-transform duration-200 ease-in-out`}
-              />
-            </button>
-            <span className="text-sm font-medium text-gray-700">Include Images</span>
-          </div>
 
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">

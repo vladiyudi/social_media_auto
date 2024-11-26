@@ -19,7 +19,6 @@ export async function PUT(request) {
     }
 
     const body = await request.json();
-    console.log('Received update request:', body);
 
     const { postId, content } = body;
 
@@ -46,7 +45,6 @@ export async function PUT(request) {
         { new: true } // Return the updated document
       );
 
-      console.log('Update result:', result);
 
       if (!result) {
         return NextResponse.json(
