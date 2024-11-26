@@ -1,5 +1,5 @@
-# Use Node.js LTS (Long Term Support) version
-FROM node:20-alpine AS builder
+# Use Node.js 18 instead of 20 for better OpenSSL compatibility
+FROM node:18-alpine AS builder
 
 # Create app directory
 WORKDIR /app
@@ -26,13 +26,16 @@ RUN npm run build
 RUN rm -f .env
 
 # Production image, copy all the files and run next
-FROM node:20-alpine AS runner
+FROM node:18-alpine AS runner
 
 WORKDIR /app
 
-# Install sharp in the production image
-RUN apk add --no-cache vips-dev
+# Install sharp in the production image and add OpenSSL configuration
+RUN apk add --no-cache vips-dev openssl
 RUN npm install --platform=linuxmusl --arch=x64 sharp
+
+# Set OpenSSL legacy provider for better compatibility
+ENV NODE_OPTIONS="--openssl-legacy-provider"
 
 RUN addgroup --system --gid 1001 nodejs
 RUN adduser --system --uid 1001 nextjs
@@ -40,6 +43,10 @@ RUN adduser --system --uid 1001 nextjs
 # Set runtime environment variables
 ENV PORT=8080
 ENV NODE_ENV=production
+
+# Create necessary directories with correct permissions
+RUN mkdir -p /app/.next/cache /app/public /app/uploads \
+    && chown -R nextjs:nodejs /app
 
 COPY --from=builder /app/.next/standalone ./
 COPY --from=builder /app/.next/static ./.next/static
@@ -49,8 +56,8 @@ COPY --from=builder /app/.next/static ./.next/static
 COPY --from=builder /app/.next/types ./.next/types
 COPY --from=builder /app/node_modules ./node_modules
 
-# Create cache directory and set permissions
-RUN mkdir -p .next/cache && chown -R nextjs:nodejs .next
+# Set permissions for all copied files
+RUN chown -R nextjs:nodejs .
 
 USER nextjs
 
