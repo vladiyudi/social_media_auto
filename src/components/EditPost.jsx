@@ -6,12 +6,25 @@ import Image from 'next/image';
 export default function EditPost({ isOpen, onClose, post, onSave }) {
   const [content, setContent] = useState(post?.idea || '');
   const [imagePrompt, setImagePrompt] = useState(post?.imagePrompt || '');
+  const [displayPrompt, setDisplayPrompt] = useState(post?.imagePrompt || '');
   const [imageUrl, setImageUrl] = useState(post?.imageUrl || '');
   const [isGeneratingImage, setIsGeneratingImage] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState('');
+  const [imageAspectRatio, setImageAspectRatio] = useState(1);
+  const [isUploadedImage, setIsUploadedImage] = useState(false);
   const fileInputRef = useRef(null);
+
+  useEffect(() => {
+    if (imageUrl) {
+      const imgElement = document.createElement('img');
+      imgElement.onload = () => {
+        setImageAspectRatio(imgElement.width / imgElement.height);
+      };
+      imgElement.src = imageUrl;
+    }
+  }, [imageUrl]);
 
   const handleFileUpload = async (event) => {
     const file = event.target.files[0];
@@ -35,8 +48,10 @@ export default function EditPost({ isOpen, onClose, post, onSave }) {
         throw new Error(data.error || 'Failed to upload image');
       }
 
-      setImageUrl(data.url); // Changed from data.imageUrl to data.url
-      setImagePrompt(''); // Clear image prompt since we're using an uploaded image
+      setImageUrl(data.url);
+      setIsUploadedImage(true);
+      setDisplayPrompt('Uploaded Image');
+      setImagePrompt('');
     } catch (error) {
       console.error('Error uploading image:', error);
       setError(error.message || 'Failed to upload image');
@@ -45,8 +60,29 @@ export default function EditPost({ isOpen, onClose, post, onSave }) {
     }
   };
 
+  const handlePromptChange = (e) => {
+    const value = e.target.value;
+    setDisplayPrompt(value);
+    setImagePrompt(value);
+    if (value !== 'Uploaded Image') {
+      setIsUploadedImage(false);
+    }
+  };
+
+  const handlePromptFocus = () => {
+    if (isUploadedImage && displayPrompt === 'Uploaded Image') {
+      setDisplayPrompt('');
+    }
+  };
+
+  const handlePromptBlur = () => {
+    if (isUploadedImage && !displayPrompt.trim()) {
+      setDisplayPrompt('Uploaded Image');
+    }
+  };
+
   const handleRegenerateImage = async () => {
-    if (!imagePrompt.trim()) {
+    if (!imagePrompt.trim() || imagePrompt === 'Uploaded Image') {
       setError('Please provide an image prompt');
       return;
     }
@@ -54,7 +90,6 @@ export default function EditPost({ isOpen, onClose, post, onSave }) {
     try {
       setIsGeneratingImage(true);
       setError('');
-      console.log('Post data in EditPost:', post); // Debug log
 
       const response = await fetch('/api/v1/images/generate', {
         method: 'POST',
@@ -74,18 +109,8 @@ export default function EditPost({ isOpen, onClose, post, onSave }) {
 
       const newImageUrl = data.imageUrl;
       setImageUrl(newImageUrl);
-      
-      // Save the changes with all required fields
-      const saveData = {
-        postId: post._id,
-        content: content || post.idea,
-        imagePrompt,
-        imageUrl: newImageUrl,
-        idea: content || post.idea,
-      };
-      
-      console.log('Saving data in EditPost:', saveData);
-      await onSave(saveData);
+      setIsUploadedImage(false);
+      setDisplayPrompt(imagePrompt);
     } catch (error) {
       console.error('Error generating image:', error);
       setError(error.message || 'Failed to generate image');
@@ -95,21 +120,18 @@ export default function EditPost({ isOpen, onClose, post, onSave }) {
   };
 
   const handleSave = async () => {
-    console.log('HandleSave called with post:', post);
-    
-    const dataToSave = {
-      postId: post._id,
-      content: content || post.idea,
-      imagePrompt,
-      imageUrl,
-      idea: content || post.idea,
-    };
-    
-    console.log('Data to save:', dataToSave);
-    
     try {
       setIsSaving(true);
       setError('');
+      
+      const dataToSave = {
+        postId: post._id,
+        content: content || post.idea,
+        imagePrompt,
+        imageUrl,
+        idea: content || post.idea,
+      };
+      
       await onSave(dataToSave);
       onClose();
     } catch (error) {
@@ -123,150 +145,137 @@ export default function EditPost({ isOpen, onClose, post, onSave }) {
   if (!isOpen) return null;
 
   return (
-    <>
-      <div 
-        className="fixed inset-0 bg-black/50 z-50"
-        onClick={onClose}
-      />
+    <div className="fixed inset-0 flex items-center justify-center z-50">
+      <div className="fixed inset-0 bg-black opacity-50" onClick={onClose}></div>
+      <div className="bg-white rounded-lg shadow-xl w-[800px] max-w-[90vw] max-h-[90vh] flex flex-col relative z-10">
+        <div className="p-4 flex justify-between items-center border-b">
+          <h3 className="text-lg font-medium text-gray-900">
+            Edit Post
+          </h3>
+          <button
+            onClick={onClose}
+            className="text-gray-400 hover:text-gray-500"
+          >
+            <span className="material-icons">close</span>
+          </button>
+        </div>
 
-      <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-        <div 
-          className="bg-white rounded-lg shadow-lg w-full max-w-md overflow-hidden"
-          onClick={e => e.stopPropagation()}
-        >
-          <div className="p-6">
-            <h3 className="text-lg font-medium text-gray-900 mb-4">
-              Edit Post
-            </h3>
+        <div className="p-4 flex-1 overflow-y-auto">
+          {error && (
+            <div className="mb-4 p-2 text-sm text-red-600 bg-red-50 rounded">
+              {error}
+            </div>
+          )}
 
-            {error && (
-              <div className="mb-4 p-2 text-sm text-red-600 bg-red-50 rounded">
-                {error}
-              </div>
-            )}
-
-            <div className="space-y-4">
-              <div className="space-y-4">
-                <div className="space-y-1">
-                  <label htmlFor="imagePrompt" className="block text-sm font-medium text-gray-700">
-                    Image Prompt
-                  </label>
-                  <div className="flex space-x-2">
-                    <textarea
-                      id="imagePrompt"
-                      className="flex-1 px-3 py-2 text-sm text-gray-700 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
-                      rows={2}
-                      value={imagePrompt}
-                      onChange={(e) => setImagePrompt(e.target.value)}
-                      placeholder="Enter image prompt..."
-                    />
-                    <button
-                      type="button"
-                      className="inline-flex items-center px-3 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50"
-                      onClick={handleRegenerateImage}
-                      disabled={isGeneratingImage || !imagePrompt.trim()}
-                    >
-                      {isGeneratingImage ? (
-                        <>
-                          <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                          </svg>
-                          Generating...
-                        </>
-                      ) : (
-                        'Regenerate'
-                      )}
-                    </button>
-                  </div>
-                </div>
-
-                <div className="flex items-center space-x-2">
-                  <span className="text-sm text-gray-500">Or</span>
-                  <input
-                    type="file"
-                    ref={fileInputRef}
-                    className="hidden"
-                    accept="image/*"
-                    onChange={handleFileUpload}
-                  />
-                  <button
-                    type="button"
-                    className="inline-flex items-center px-3 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50"
-                    onClick={() => fileInputRef.current?.click()}
-                    disabled={isUploading}
-                  >
-                    {isUploading ? (
-                      <>
-                        <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-gray-700" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                        </svg>
-                        Uploading...
-                      </>
-                    ) : (
-                      'Upload Image'
-                    )}
-                  </button>
-                </div>
-
-                {(imageUrl || isGeneratingImage || isUploading) && (
-                  <div className="relative aspect-square w-full overflow-hidden rounded-lg">
-                    {imageUrl && imageUrl.includes('storage.googleapis.com') ? (
-                      <img
-                        src={imageUrl}
-                        alt={imagePrompt || 'Post image'}
-                        className="object-cover w-full h-full"
-                      />
-                    ) : (
-                      <Image
-                        src={imageUrl}
-                        alt={imagePrompt || 'Post image'}
-                        className="object-cover"
-                        fill
-                        sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-                      />
-                    )}
-                  </div>
-                )}
-              </div>
-
-              <div className="space-y-1">
-                <label htmlFor="content" className="block text-sm font-medium text-gray-700">
-                  Post Content
-                </label>
+          <div className="space-y-4">
+            <div className="space-y-1">
+              <label htmlFor="imagePrompt" className="block text-sm font-medium text-gray-700">
+                {isUploadedImage ? 'Image Prompt (optional - enter to generate new image)' : 'Image Prompt'}
+              </label>
+              <div className="flex space-x-2 items-stretch h-[66px]">
+                <button
+                  type="button"
+                  className="aspect-square h-full inline-flex items-center justify-center border border-gray-300 rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50"
+                  onClick={() => fileInputRef.current?.click()}
+                  disabled={isUploading}
+                  title="Upload image"
+                >
+                  {isUploading ? (
+                    <span className="material-icons animate-spin">refresh</span>
+                  ) : (
+                    <span className="material-icons">upload</span>
+                  )}
+                </button>
                 <textarea
-                  id="content"
-                  className="w-full px-3 py-2 text-sm text-gray-700 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
-                  rows={6}
-                  value={content}
-                  onChange={(e) => setContent(e.target.value)}
-                  placeholder="Enter post content..."
+                  id="imagePrompt"
+                  className="flex-1 px-3 py-2 text-sm text-gray-700 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+                  rows={2}
+                  value={displayPrompt}
+                  onChange={handlePromptChange}
+                  onFocus={handlePromptFocus}
+                  onBlur={handlePromptBlur}
+                  disabled={isGeneratingImage}
+                  placeholder="Enter image prompt..."
+                />
+                <button
+                  type="button"
+                  className="aspect-square h-full inline-flex items-center justify-center border border-transparent rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50"
+                  onClick={handleRegenerateImage}
+                  disabled={isGeneratingImage || !imagePrompt.trim() || imagePrompt === 'Uploaded Image'}
+                  title={isUploadedImage ? "Generate new image from prompt" : "Regenerate image"}
+                >
+                  {isGeneratingImage ? (
+                    <span className="material-icons animate-spin">refresh</span>
+                  ) : (
+                    <span className="material-icons">auto_fix_high</span>
+                  )}
+                </button>
+                <input
+                  type="file"
+                  ref={fileInputRef}
+                  className="hidden"
+                  accept="image/*"
+                  onChange={handleFileUpload}
                 />
               </div>
             </div>
 
-            <div className="mt-6 flex justify-end space-x-3">
-              <button
-                type="button"
-                className="inline-flex justify-center rounded-md border border-transparent bg-gray-100 px-4 py-2 text-sm font-medium text-gray-900 hover:bg-gray-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-gray-500 focus-visible:ring-offset-2"
-                onClick={onClose}
-                disabled={isSaving || isGeneratingImage || isUploading}
-              >
-                Cancel
-              </button>
-              <button
-                type="button"
-                className="inline-flex justify-center rounded-md border border-transparent bg-blue-100 px-4 py-2 text-sm font-medium text-blue-900 hover:bg-blue-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2"
-                onClick={handleSave}
-                disabled={isSaving || isGeneratingImage || isUploading}
-              >
-                {isSaving ? 'Saving...' : 'Save Changes'}
-              </button>
+            {imageUrl && (
+              <div className="relative w-full" style={{ paddingBottom: `${100 / imageAspectRatio}%` }}>
+                <Image
+                  src={imageUrl}
+                  alt="Post image"
+                  fill
+                  className="rounded-lg object-contain"
+                  sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                />
+              </div>
+            )}
+
+            <div className="space-y-1">
+              <label htmlFor="content" className="block text-sm font-medium text-gray-700">
+                Content
+              </label>
+              <textarea
+                id="content"
+                className="w-full px-3 py-2 text-sm text-gray-700 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+                rows={4}
+                value={content}
+                onChange={(e) => setContent(e.target.value)}
+                placeholder="Enter post content..."
+              />
             </div>
           </div>
         </div>
+
+        <div className="p-4 border-t flex justify-end space-x-2">
+          <button
+            type="button"
+            className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+            onClick={onClose}
+          >
+            Cancel
+          </button>
+          <button
+            type="button"
+            className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50"
+            onClick={handleSave}
+            disabled={isSaving}
+          >
+            {isSaving ? (
+              <>
+                <span className="material-icons animate-spin mr-2">refresh</span>
+                Saving...
+              </>
+            ) : (
+              <>
+                <span className="material-icons mr-2">save</span>
+                Save
+              </>
+            )}
+          </button>
+        </div>
       </div>
-    </>
+    </div>
   );
 }

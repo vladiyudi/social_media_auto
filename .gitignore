@@ -35,6 +35,7 @@ yarn-error.log*
 google-credentials.json
 .env.build
 .env.temp
+env_vars.yaml
 
 # vercel
 .vercel

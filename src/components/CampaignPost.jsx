@@ -5,24 +5,25 @@ import Image from 'next/image';
 import EditPost from './EditPost';
 
 export default function CampaignPost({ day, platform, postData, styles, onUpdate }) {
-  const [isExpanded, setIsExpanded] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [currentPostData, setCurrentPostData] = useState(postData);
+  const [imageAspectRatio, setImageAspectRatio] = useState(1);
 
   useEffect(() => {
     setCurrentPostData(postData);
   }, [postData]);
 
-  const handleSavePost = async ({ postId, content, idea, imagePrompt, imageUrl }) => {
-    console.log('HandleSavePost received:', {
-      postId,
-      content,
-      idea,
-      imagePrompt,
-      imageUrl,
-      currentPostData
-    });
+  useEffect(() => {
+    if (currentPostData?.imageUrl) {
+      const imgElement = document.createElement('img');
+      imgElement.onload = () => {
+        setImageAspectRatio(imgElement.width / imgElement.height);
+      };
+      imgElement.src = currentPostData.imageUrl;
+    }
+  }, [currentPostData?.imageUrl]);
 
+  const handleSavePost = async ({ postId, content, idea, imagePrompt, imageUrl }) => {
     if (!postId || !content) {
       console.error('Missing required fields:', { postId, content });
       throw new Error('Post ID and content are required');
@@ -32,13 +33,11 @@ export default function CampaignPost({ day, platform, postData, styles, onUpdate
       const requestData = {
         postId: postId.toString(),
         content,
-        idea,
+        idea: idea || content,
         imagePrompt,
         imageUrl,
       };
 
-      console.log('Sending update request:', requestData);
-      
       const response = await fetch('/api/v1/posts/update', {
         method: 'PUT',
         headers: {
@@ -48,29 +47,27 @@ export default function CampaignPost({ day, platform, postData, styles, onUpdate
       });
 
       const responseData = await response.json();
-      console.log('Server response:', responseData);
 
       if (!response.ok) {
-        const errorMessage = responseData.error || 'Failed to update post';
-        if (responseData.details) {
-          console.error('Error details:', responseData.details);
-        }
-        throw new Error(errorMessage);
+        throw new Error(responseData.error || 'Failed to update post');
       }
 
       const updatedPost = {
         ...currentPostData,
         idea: idea || content,
-        content,
         imagePrompt,
         imageUrl,
         updatedAt: new Date().toISOString()
       };
-      
-      console.log('Updating post with:', updatedPost);
+
       setCurrentPostData(updatedPost);
-      onUpdate?.(updatedPost);
-      
+      setIsEditModalOpen(false);
+
+      // Notify parent component if onUpdate is provided
+      if (typeof onUpdate === 'function') {
+        onUpdate(updatedPost);
+      }
+
       return responseData;
     } catch (error) {
       console.error('Error updating post:', error);
@@ -91,42 +88,35 @@ export default function CampaignPost({ day, platform, postData, styles, onUpdate
         {!currentPostData ? (
           <div className="text-sm text-gray-500">No post scheduled</div>
         ) : (
-          <div className="space-y-2 h-full flex flex-col">
-            {currentPostData.imageUrl && (
-              <div 
-                className="relative aspect-square w-full overflow-hidden rounded-lg flex-shrink-0 group"
-              >
-                <Image 
-                  src={currentPostData.imageUrl} 
-                  alt={currentPostData.imagePrompt || 'Generated image'} 
-                  className="object-cover"
-                  fill
-                  sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-                  onError={(e) => {
-                    console.error('Image failed to load:', currentPostData.imageUrl);
-                    e.target.style.display = 'none';
-                  }}
-                />
-              </div>
-            )}
-            
-            <div className={`relative flex-grow min-h-0 ${isExpanded ? 'overflow-y-auto' : ''}`}>
-              <p className={`text-sm text-gray-900 ${!isExpanded && 'line-clamp-3'}`}>
-                {currentPostData.idea}
-              </p>
-              {currentPostData.idea?.length > 150 && !isExpanded && (
-                <div 
-                  className="absolute bottom-0 left-0 right-0 h-6 bg-gradient-to-t from-white to-transparent"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setIsExpanded(true);
-                  }}
-                />
+          <div className="h-full flex flex-col">
+            {/* Image section - fixed height based on container width */}
+            <div className="flex-[2] min-h-0 mb-4">
+              {currentPostData.imageUrl && (
+                <div className="relative w-full" style={{ paddingBottom: `${100 / imageAspectRatio}%` }}>
+                  <Image 
+                    src={currentPostData.imageUrl} 
+                    alt={currentPostData.imagePrompt || 'Generated image'} 
+                    fill
+                    className="object-contain"
+                    sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                    onError={(e) => {
+                      console.error('Image failed to load:', currentPostData.imageUrl);
+                      e.target.style.display = 'none';
+                    }}
+                  />
+                </div>
               )}
             </div>
 
-            <div className="flex items-center justify-between mt-auto pt-2">
-              <div className="flex items-center space-x-2">
+            {/* Text section */}
+            <div className="flex flex-col flex-1">
+              <div className="flex-1 overflow-y-auto max-h-32 scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100">
+                <p className="text-sm text-gray-900">
+                  {currentPostData.idea}
+                </p>
+              </div>
+
+              <div className="flex items-center justify-between mt-2 pt-2 border-t">
                 <span className="text-xs text-gray-500">
                   {platform}
                 </span>
