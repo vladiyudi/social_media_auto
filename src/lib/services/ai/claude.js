@@ -59,8 +59,9 @@ Requirements:
 3. Include EVERY day until ${end.toISOString().split('T')[0]}
 4. Use ISO date format (YYYY-MM-DD)
 5. Generate unique content for each platform and day
+6. For imagePrompt, provide a clear, detailed description that would help an AI image generator create a relevant image. Focus on visual elements, style, and mood.
 
-Make each post idea unique and engaging, considering the specific features and audience of each platform. Include image prompts that will help generate visually appealing content.`;
+Make each post idea unique and engaging, considering the specific features and audience of each platform.`;
 
     const message = await anthropic.messages.create({
       model: 'claude-3-haiku-20240307',
@@ -71,8 +72,26 @@ Make each post idea unique and engaging, considering the specific features and a
       }]
     });
 
-    const response = JSON.parse(message.content[0].text);
-    
+    let response;
+    try {
+      // Extract JSON from the response
+      const jsonMatch = message.content[0].text.match(/\{[\s\S]*\}/);
+      if (!jsonMatch) {
+        throw new Error('No JSON found in response');
+      }
+      response = JSON.parse(jsonMatch[0]);
+    } catch (error) {
+      console.error('Error parsing Claude response:', error);
+      console.log('Raw response:', message.content[0].text);
+      throw new Error('Failed to parse campaign ideas from Claude');
+    }
+
+    // Validate response structure
+    if (!response || !Array.isArray(response.posts)) {
+      console.error('Invalid response structure:', response);
+      throw new Error('Invalid response structure from Claude');
+    }
+
     // Calculate expected number of posts
     const daysDiff = Math.floor((end - start) / (1000 * 60 * 60 * 24)) + 1;
     const expectedPosts = daysDiff * platforms.length;

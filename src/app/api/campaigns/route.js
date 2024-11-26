@@ -91,20 +91,31 @@ export async function POST(request) {
       platform: post.platform
     })));
     
-    const postsWithImages = await Promise.all(
-      campaignIdeas.posts.map(async (post) => {
-        if (post.imagePrompt) {
-          try {
-            const imageUrl = await generateImage(post.imagePrompt);
-            return { ...post, imageUrl };
-          } catch (error) {
-            console.error('Error generating image for post:', error);
-            return post;
+    let postsWithImages;
+    if (data.includeImages) {
+      // Generate images for posts if includeImages is true
+      postsWithImages = await Promise.all(
+        campaignIdeas.posts.map(async (post) => {
+          if (post.imagePrompt) {
+            try {
+              const imageUrl = await generateImage(post.imagePrompt);
+              return { ...post, imageUrl };
+            } catch (error) {
+              console.error('Error generating image for post:', error);
+              return { ...post, imagePrompt: '', imageUrl: '' };
+            }
           }
-        }
-        return post;
-      })
-    );
+          return post;
+        })
+      );
+    } else {
+      // Remove image-related fields if includeImages is false
+      postsWithImages = campaignIdeas.posts.map(post => ({
+        ...post,
+        imagePrompt: '',
+        imageUrl: ''
+      }));
+    }
 
     // Create campaign with generated ideas and images
     const campaign = await Campaign.create({

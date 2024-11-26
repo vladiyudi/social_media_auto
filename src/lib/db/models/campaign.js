@@ -13,8 +13,8 @@ const postSchema = new mongoose.Schema({
     required: true 
   },
   idea: { type: String, required: true },
-  imagePrompt: { type: String, required: true },
-  imageUrl: { type: String },
+  imagePrompt: { type: String, default: '' }, 
+  imageUrl: { type: String, default: '' }, 
   content: { type: String }
 });
 
