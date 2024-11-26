@@ -1,12 +1,10 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   output: 'standalone',
-  env: {
-    PORT: process.env.PORT || '8080'
-  },
   experimental: {
+    appDir: true,
     serverActions: {
-      allowedOrigins: ['localhost:3000', 'localhost:8080']
+      allowedOrigins: ['*']
     }
   },
   images: {
@@ -19,13 +17,7 @@ const nextConfig = {
         protocol: 'https',
         hostname: 'fal.media',
       },
-      {
-        protocol: 'https',
-        hostname: 'storage.googleapis.com',
-        pathname: '/knbl-sma/**',
-      }
     ],
-    unoptimized: true
   },
 }
 

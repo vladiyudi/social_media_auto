@@ -1,67 +1,61 @@
-# Use Node.js 18 instead of 20 for better OpenSSL compatibility
-FROM node:18-alpine AS builder
+# Build stage
+FROM --platform=linux/amd64 node:18-alpine AS builder
 
 # Create app directory
 WORKDIR /app
 
-# Install sharp explicitly
-RUN apk add --no-cache python3 make g++ vips-dev
+# Install build dependencies
+RUN apk add --no-cache \
+    python3 \
+    build-base \
+    vips-dev
 
-# Copy package files first for better caching
+# Copy package files
 COPY package*.json ./
 
-# Install dependencies including sharp
-RUN npm install --legacy-peer-deps sharp
+# Install dependencies
+RUN npm install --legacy-peer-deps
 
-# Copy local code to container
+# Copy source
 COPY . .
 
-# Copy build environment file
+# Copy env file
 COPY .env.build .env
 
-# Build the application
+# Build the app
 RUN npm run build
 
-# Remove the environment file after build
+# Remove env file
 RUN rm -f .env
 
-# Production image, copy all the files and run next
-FROM node:18-alpine AS runner
+# Production stage
+FROM --platform=linux/amd64 node:18-alpine AS runner
 
 WORKDIR /app
 
-# Install sharp in the production image and add OpenSSL configuration
-RUN apk add --no-cache vips-dev openssl
-RUN npm install --platform=linuxmusl --arch=x64 sharp
+# Install production dependencies
+RUN apk add --no-cache \
+    vips \
+    openssl \
+    ca-certificates
 
-# Set OpenSSL legacy provider for better compatibility
-ENV NODE_OPTIONS="--openssl-legacy-provider"
+# Create non-root user
+RUN addgroup --system --gid 1001 nodejs && \
+    adduser --system --uid 1001 --ingroup nodejs nextjs
 
-RUN addgroup --system --gid 1001 nodejs
-RUN adduser --system --uid 1001 nextjs
-
-# Set runtime environment variables
-ENV PORT=8080
+# Set environment variables
 ENV NODE_ENV=production
+ENV NODE_OPTIONS="--openssl-legacy-provider"
+ENV PORT=8080
+ENV HOST=0.0.0.0
 
-# Create necessary directories with correct permissions
-RUN mkdir -p /app/.next/cache /app/public /app/uploads \
-    && chown -R nextjs:nodejs /app
-
-COPY --from=builder /app/.next/standalone ./
-COPY --from=builder /app/.next/static ./.next/static
-COPY --from=builder /app/public ./public
-COPY --from=builder /app/.next/server ./.next/server
-COPY --from=builder /app/.next/static ./.next/static
-COPY --from=builder /app/.next/types ./.next/types
-COPY --from=builder /app/node_modules ./node_modules
-
-# Set permissions for all copied files
-RUN chown -R nextjs:nodejs .
+# Copy standalone build
+COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
+COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
+COPY --from=builder --chown=nextjs:nodejs /app/public ./public
 
 USER nextjs
 
 EXPOSE 8080
 
-# Start the server with the correct port
-CMD ["sh", "-c", "PORT=8080 node server.js"]
+CMD ["node", "server.js"]

@@ -1,0 +1,4 @@
+NODE_ENV: "production"
+PORT: "8080"
+MONGODB_URI: "mongodb+srv://knbl-ai:rFXM2uWuekh%24LjM@knbl.x2yct.mongodb.net/?retryWrites=true&w=majority&appName=knbl"
+NEXTAUTH_SECRET: "knbl_automation_secret"
