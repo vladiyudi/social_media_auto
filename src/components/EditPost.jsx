@@ -35,7 +35,7 @@ export default function EditPost({ isOpen, onClose, post, onSave }) {
         throw new Error(data.error || 'Failed to upload image');
       }
 
-      setImageUrl(data.imageUrl);
+      setImageUrl(data.url); // Changed from data.imageUrl to data.url
       setImagePrompt(''); // Clear image prompt since we're using an uploaded image
     } catch (error) {
       console.error('Error uploading image:', error);

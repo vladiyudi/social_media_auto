@@ -17,6 +17,10 @@ const nextConfig = {
         protocol: 'https',
         hostname: 'fal.media',
       },
+      {
+        protocol: 'https',
+        hostname: 'storage.googleapis.com',
+      },
     ],
   },
 }
