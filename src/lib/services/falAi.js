@@ -16,16 +16,11 @@ const platformSizes = {
   x: "landscape_4_3",
 };
 
-const models = {
-  shnell: "flux/schnell",
-  proNew: "flux-pro/new",
-}
 
-
-export async function generateImage(prompt, platform) {
-
+export async function generateImage(prompt, platform, imageModel) {
+  
   try {
-    const result = await fal.subscribe(`fal-ai/${models['proNew']}`, {
+    const result = await fal.subscribe(`fal-ai/${imageModel}`, {
       input: {
         prompt: prompt,
         image_size: platformSizes[platform]

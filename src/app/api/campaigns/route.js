@@ -69,59 +69,75 @@ export async function POST(request) {
     // Convert dates to proper ISO strings
     const startDate = new Date(data.startDate);
     const endDate = new Date(data.endDate);
- 
 
+    // Generate campaign ideas with all parameters
     const campaignIdeas = await generateCampaignIdeas({
       description: data.description,
       startDate: startDate.toISOString(),
       endDate: endDate.toISOString(),
-      platforms: data.platforms
+      platforms: data.platforms,
+      brandLanguage: data.brandLanguage,
+      imageStyle: data.imageStyle,
+      llmModel: data.llmModel
     });
 
+    let postsWithImages = campaignIdeas.posts;
     
-    let postsWithImages;
     if (data.includeImages) {
-      // Generate images for posts if includeImages is true
+      // Generate images for each post
       postsWithImages = await Promise.all(
         campaignIdeas.posts.map(async (post) => {
-          if (post.imagePrompt) {
-            try {
-              const imageUrl = await generateImage(post.imagePrompt, post.platform);
-              return { ...post, imageUrl };
-            } catch (error) {
-              console.error('Error generating image for post:', error);
-              return { ...post, imagePrompt: '', imageUrl: '' };
-            }
+          try {
+            const imageResult = await generateImage(post.imagePrompt, post.platform, data.imageModel);
+       
+            return { 
+              ...post, 
+              imageUrl: imageResult,
+              imageGenerated: true 
+            };
+          } catch (error) {
+            console.error('Error generating image:', error);
+            return { 
+              ...post, 
+              imageUrl: null,
+              imageGenerated: false,
+              imageError: error.message 
+            };
           }
-          return post;
         })
       );
-    } else {
-      // Remove image-related fields if includeImages is false
-      postsWithImages = campaignIdeas.posts.map(post => ({
-        ...post,
-        imagePrompt: '',
-        imageUrl: ''
-      }));
     }
 
-    // Create campaign with generated ideas and images
+    // Create campaign in database
     const campaign = await Campaign.create({
-      ...data,
-      startDate: startDate,
-      endDate: endDate,
+      name: data.name,
+      description: data.description,
+      startDate,
+      endDate,
+      platforms: data.platforms,
+      connection: data.connection,
       userId: session.user.email,
-      generatedPosts: postsWithImages
+      brandLanguage: data.brandLanguage,
+      imageStyle: data.imageStyle,
+      llmModel: data.llmModel,
+      imageModel: data.imageModel,
+      includeImages: data.includeImages,
+      generatedPosts: postsWithImages,
+      status: 'pending'
     });
 
+    return NextResponse.json({ 
+      success: true,
+      message: 'Campaign created successfully',
+      campaign 
+    });
 
-    return NextResponse.json({ campaign });
   } catch (error) {
     console.error('Error creating campaign:', error);
-    return NextResponse.json(
-      { error: 'Internal Server Error' },
-      { status: 500 }
-    );
+    return NextResponse.json({ 
+      success: false, 
+      message: error.message || 'Failed to create campaign'
+    }, { status: 500 });
   }
 }
 

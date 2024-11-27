@@ -9,12 +9,12 @@ import { connectToDatabase } from '@/lib/db/mongodb';
 const connectDB = async () => {
   try {
     if (mongoose.connections[0].readyState) {
-      console.log('Already connected to MongoDB');
+
       return;
     }
-    console.log('Connecting to MongoDB...');
+ 
     await mongoose.connect(process.env.MONGODB_URI);
-    console.log('Successfully connected to MongoDB');
+  
   } catch (error) {
     console.error('MongoDB connection error:', error);
     throw error;
@@ -31,7 +31,6 @@ export async function PUT(request) {
     }
 
     const body = await request.json();
-    console.log('Received update request:', body);
 
     const { postId, content, imageUrl, imagePrompt } = body;
 
@@ -52,10 +51,10 @@ export async function PUT(request) {
         'generatedPosts._id': postId
       });
 
-      console.log('Found campaign:', campaign ? campaign._id : 'none');
+   
 
       if (!campaign) {
-        console.log('No campaign found containing post:', postId);
+  
         return NextResponse.json(
           { error: 'Post not found' },
           { status: 404 }
@@ -92,7 +91,6 @@ export async function PUT(request) {
         }
       );
 
-      console.log('Update result:', result ? 'success' : 'failed');
 
       if (!result) {
         console.log('Failed to update post in campaign');

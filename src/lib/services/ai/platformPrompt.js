@@ -1,4 +1,4 @@
-export function fbPrompt(idea) {
+export function fbPrompt(idea, brandLanguage) {
     const prompt = `You are tasked with creating an engaging Facebook post based on a given idea. Your goal is to craft a post that is optimized for the Facebook platform and follows best practices for social media engagement.
 
 Here are the guidelines for creating an effective Facebook post:
@@ -12,7 +12,7 @@ ${idea}
 
 3. Use a conversational and friendly tone that resonates with Facebook users.
 
-4. Include emojis sparingly to add visual interest, but don't overuse them.
+4. Use emojis sparingly to add visual interest, but don't overuse them.
 
 5. Consider using a question or a thought-provoking statement to encourage engagement.
 
@@ -26,24 +26,24 @@ ${idea}
 
 10. If possible, frame the idea in a way that relates to current trends or topics of interest on social media.
 
+11. Generate the post in a way that aligns with the brand language:
+<brand_language>
+${brandLanguage}
+</brand_language>
+
 After crafting the post, review it to ensure it's engaging, concise, and optimized for Facebook. Make any necessary refinements to improve its potential for engagement and shareability.
 
-Output your final Facebook post in JSON format as follows:
+IMPORTANT: Respond ONLY with the JSON object containing your post, no additional text or formatting:
 
-<output>
 {
   "post": "Your optimized Facebook post content here"
-}
-</output>
+}`;
 
-Remember to tailor the post specifically for the Facebook platform, considering its unique features and user behavior.`
-
-return prompt
+    return prompt;
 }
 
-export function instaPrompt(idea) {
-  const prompt = `
-  You are tasked with generating an Instagram post based on a given idea, following best practices for the platform. Your goal is to create engaging, visually-oriented content that resonates with Instagram users.
+export function instaPrompt(idea, brandLanguage) {
+    const prompt = `You are tasked with generating an Instagram post based on a given idea, following best practices for the platform. Your goal is to create engaging, visually-oriented content that resonates with Instagram users.
 
 Here's the idea you'll be working with:
 <idea>
@@ -64,13 +64,16 @@ Generate an Instagram post based on the given idea, following these steps:
 4. Add relevant emojis throughout the post.
 5. Conclude with 3-5 appropriate hashtags.
 
-Your output should be in JSON format, with the entire post content contained within the "post" key. Here's an example of the expected format:
+Generate the post in a way that aligns with the brand language:
+<brand_language>
+${brandLanguage}
+</brand_language>
+
+IMPORTANT: Respond ONLY with the JSON object containing your post, no additional text or formatting:
 
 {
-  "post": "🌟 Exciting news! [Your content here] #hashtag1 #hashtag2 #hashtag3"
-}
+  "post": "Your Instagram post content here"
+}`;
 
-Remember to tailor the content to Instagram's visual-first approach and keep it engaging and concise`
-
-return prompt
+    return prompt;
 }

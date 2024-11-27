@@ -8,20 +8,27 @@ const nextConfig = {
     }
   },
   images: {
+    domains: [
+      'picsum.photos',
+      'fal.media',
+      'storage.googleapis.com', 
+      'lh3.googleusercontent.com', 
+    ],
     remotePatterns: [
       {
         protocol: 'https',
-        hostname: 'lh3.googleusercontent.com',
-      },
-      {
-        protocol: 'https',
         hostname: 'fal.media',
+        pathname: '/files/**',
       },
       {
         protocol: 'https',
         hostname: 'storage.googleapis.com',
       },
     ],
+  },
+  webpack: (config) => {
+    config.externals = [...(config.externals || []), 'canvas', 'jsdom'];
+    return config;
   },
 }
 
