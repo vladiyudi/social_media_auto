@@ -1,5 +1,4 @@
 import { fal } from "@fal-ai/client";
-import { link } from "fs";
 
 // Initialize fal client with credentials
 fal.config({
@@ -17,7 +16,7 @@ const platformSizes = {
 };
 
 
-export async function generateImage(prompt, platform, imageModel) {
+export async function generateImage(prompt, platform, imageModel="flux-pro/new") {
   
   try {
     const result = await fal.subscribe(`fal-ai/${imageModel}`, {

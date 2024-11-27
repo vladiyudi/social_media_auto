@@ -5,22 +5,6 @@ import mongoose from 'mongoose';
 import { Campaign } from '@/lib/db/models/campaign';
 import { connectToDatabase } from '@/lib/db/mongodb';
 
-// Connect to MongoDB
-const connectDB = async () => {
-  try {
-    if (mongoose.connections[0].readyState) {
-
-      return;
-    }
- 
-    await mongoose.connect(process.env.MONGODB_URI);
-  
-  } catch (error) {
-    console.error('MongoDB connection error:', error);
-    throw error;
-  }
-};
-
 export async function PUT(request) {
   try {
     // Check authentication
@@ -31,7 +15,6 @@ export async function PUT(request) {
     }
 
     const body = await request.json();
-
     const { postId, content, imageUrl, imagePrompt } = body;
 
     if (!postId || !content) {
@@ -51,10 +34,7 @@ export async function PUT(request) {
         'generatedPosts._id': postId
       });
 
-   
-
       if (!campaign) {
-  
         return NextResponse.json(
           { error: 'Post not found' },
           { status: 404 }
@@ -64,6 +44,7 @@ export async function PUT(request) {
       // Update the post within the campaign
       const updateFields = {
         'generatedPosts.$.idea': content,
+        'generatedPosts.$.content': content,
         'generatedPosts.$.updatedAt': new Date()
       };
 
@@ -77,20 +58,21 @@ export async function PUT(request) {
 
       console.log('Updating with fields:', updateFields);
 
+      // Use findOneAndUpdate with positional operator
       const result = await Campaign.findOneAndUpdate(
         { 
           '_id': campaign._id,
           'generatedPosts._id': postId
         },
         { 
-          $set: updateFields
+          $set: updateFields,
+          $currentDate: { updatedAt: true }
         },
         { 
-          new: true, // Return the updated document
-          runValidators: true // Run schema validators
+          new: true,
+          runValidators: true
         }
-      );
-
+      ).lean(); // Use lean() to get a plain JavaScript object
 
       if (!result) {
         console.log('Failed to update post in campaign');
@@ -105,16 +87,21 @@ export async function PUT(request) {
         post => post._id.toString() === postId
       );
 
-      return NextResponse.json(updatedPost);
-    } catch (dbError) {
-      console.error('Database error:', dbError);
-      // Check if it's a validation error
-      if (dbError.name === 'ValidationError') {
+      if (!updatedPost) {
         return NextResponse.json(
-          { error: 'Validation failed', details: dbError.message },
-          { status: 400 }
+          { error: 'Failed to find updated post' },
+          { status: 500 }
         );
       }
+
+      // Return the updated post with proper ID conversion
+      return NextResponse.json({
+        ...updatedPost,
+        _id: updatedPost._id.toString()
+      });
+
+    } catch (dbError) {
+      console.error('Database error:', dbError);
       return NextResponse.json(
         { error: 'Database operation failed', details: dbError.message },
         { status: 500 }

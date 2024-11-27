@@ -1,20 +1,32 @@
-import { withAuth } from "next-auth/middleware";
-import { NextResponse } from "next/server";
+import { NextResponse } from 'next/server';
+import { getToken } from 'next-auth/jwt';
 
-export default withAuth(
-  function middleware(req) {
-    if (!req.nextauth.token && req.nextUrl.pathname !== "/login") {
-      return NextResponse.redirect(new URL("/login", req.url));
-    }
+export async function middleware(request) {
+  // Bypass auth for cron endpoint
+  if (request.nextUrl.pathname.startsWith('/api/cron')) {
     return NextResponse.next();
-  },
-  {
-    callbacks: {
-      authorized: ({ token }) => !!token,
-    },
   }
-);
+
+  // Check if this is an API route
+  const isApiRoute = request.nextUrl.pathname.startsWith('/api');
+
+  // Get the token
+  const token = await getToken({ req: request });
+
+  // If no token and trying to access protected route
+  if (!token && (isApiRoute || request.nextUrl.pathname.startsWith('/app'))) {
+    if (isApiRoute) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+    return NextResponse.redirect(new URL('/login', request.url));
+  }
+
+  return NextResponse.next();
+}
 
 export const config = {
-  matcher: ["/app/:path*"],
-};
+  matcher: [
+    '/app/:path*',
+    '/api/:path*',
+  ],
+}

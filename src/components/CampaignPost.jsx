@@ -23,13 +23,14 @@ export default function CampaignPost({ day, platform, postData, styles, onUpdate
     }
   }, [currentPostData?.imageUrl]);
 
-  const handleSavePost = async ({ postId, content, idea, imagePrompt, imageUrl }) => {
-    if (!postId || !content) {
-      console.error('Missing required fields:', { postId, content });
-      throw new Error('Post ID and content are required');
-    }
-
+  const handleSavePost = async (data) => {
     try {
+      const { postId, content, idea, imagePrompt, imageUrl } = data;
+      
+      if (!postId || !content) {
+        throw new Error('Post ID and content are required');
+      }
+
       const requestData = {
         postId: postId.toString(),
         content,
@@ -52,23 +53,21 @@ export default function CampaignPost({ day, platform, postData, styles, onUpdate
         throw new Error(responseData.error || 'Failed to update post');
       }
 
+      // Immediately update the local state with the new data
       const updatedPost = {
         ...currentPostData,
-        idea: idea || content,
-        imagePrompt,
-        imageUrl,
-        updatedAt: new Date().toISOString()
+        ...requestData,
+        ...responseData,
       };
-
+      
       setCurrentPostData(updatedPost);
       setIsEditModalOpen(false);
 
-      // Notify parent component if onUpdate is provided
-      if (typeof onUpdate === 'function') {
+      // Call the parent's update function
+      if (onUpdate) {
         onUpdate(updatedPost);
       }
 
-      return responseData;
     } catch (error) {
       console.error('Error updating post:', error);
       throw error;
@@ -92,7 +91,11 @@ export default function CampaignPost({ day, platform, postData, styles, onUpdate
             {/* Image section - fixed height based on container width */}
             <div className="flex-[2] min-h-0 mb-4">
               {currentPostData.imageUrl && (
-                <div className="relative w-full" style={{ paddingBottom: `${100 / imageAspectRatio}%` }}>
+                <div 
+                  className="relative w-full" 
+                  style={{ paddingBottom: `${100 / imageAspectRatio}%` }}
+                  key={currentPostData.imageUrl} // Force re-render when image URL changes
+                >
                   <Image 
                     src={currentPostData.imageUrl} 
                     alt={currentPostData.imagePrompt || 'Generated image'} 

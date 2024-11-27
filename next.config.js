@@ -1,12 +1,6 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   output: 'standalone',
-  experimental: {
-    appDir: true,
-    serverActions: {
-      allowedOrigins: ['*']
-    }
-  },
   images: {
     domains: [
       'picsum.photos',

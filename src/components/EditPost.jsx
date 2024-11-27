@@ -125,13 +125,13 @@ export default function EditPost({ isOpen, onClose, post, onSave }) {
       setError('');
       
       const dataToSave = {
-        postId: post._id,
+        postId: post._id.toString(), 
         content: content || post.idea,
-        imagePrompt,
-        imageUrl,
+        imagePrompt: imagePrompt || post.imagePrompt,
+        imageUrl: imageUrl || post.imageUrl,
         idea: content || post.idea,
       };
-      
+
       await onSave(dataToSave);
       onClose();
     } catch (error) {
