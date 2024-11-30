@@ -30,6 +30,7 @@ const campaignSchema = new mongoose.Schema({
     enum: ['facebook', 'instagram', 'twitter', 'linkedin'],
     required: true
   }],
+  isActive: { type: Boolean, default: false },
   generatedPosts: [postSchema], 
   createdAt: { type: Date, default: Date.now },
   updatedAt: { type: Date, default: Date.now }

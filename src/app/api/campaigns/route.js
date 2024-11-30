@@ -174,3 +174,39 @@ export async function DELETE(request) {
     );
   }
 }
+
+// PATCH /api/campaigns - Update campaign activation status
+export async function PATCH(request) {
+  try {
+    const session = await getServerSession(authOptions);
+    if (!session) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    await connectDB();
+
+    const { searchParams } = new URL(request.url);
+    const id = searchParams.get('id');
+    
+    if (!id) {
+      return NextResponse.json({ error: 'Campaign ID is required' }, { status: 400 });
+    }
+
+    const { isActive } = await request.json();
+
+    const campaign = await Campaign.findOneAndUpdate(
+      { _id: id, userId: session.user.id },
+      { isActive },
+      { new: true }
+    );
+
+    if (!campaign) {
+      return NextResponse.json({ error: 'Campaign not found' }, { status: 404 });
+    }
+
+    return NextResponse.json(campaign);
+  } catch (error) {
+    console.error('Error updating campaign:', error);
+    return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
+  }
+}

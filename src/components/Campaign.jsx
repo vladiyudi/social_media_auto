@@ -1,10 +1,12 @@
 'use client';
 
+import { useEffect } from 'react';
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Cross } from '@/components/ui/cross';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { Switch } from '@/components/ui/switch';
 import { LinkIcon } from '@heroicons/react/24/outline';
 import { getConnectionName } from '@/lib/utils/connections';
 
@@ -24,10 +26,13 @@ export default function Campaign({
   platforms,
   connection,
   onDelete,
+  isActive,
+  onActivate,
   isLoading 
 }) {
   const router = useRouter();
   const [deleteState, setDeleteState] = useState(false);
+  const [activating, setActivating] = useState(false);
   const connectionName = getConnectionName(connection);
 
   const handleDelete = (e) => {
@@ -42,12 +47,27 @@ export default function Campaign({
     }
   };
 
+  const handleActivate = async () => {
+    if (activating) return;
+    
+    try {
+      setActivating(true);
+      if (onActivate) {
+        await onActivate(id);
+      }
+    } catch (error) {
+      console.error('Error activating campaign:', error);
+    } finally {
+      setActivating(false);
+    }
+  };
+
   const handleMouseLeave = () => {
     setDeleteState(false);
   };
 
   const handleClick = () => {
-    if (!isLoading) {
+    if (!isLoading && !activating) {
       router.push(`/campaign/${id}`);
     }
   };
@@ -60,45 +80,57 @@ export default function Campaign({
     });
   };
 
+
   return (
     <div 
       className={`aspect-square bg-card border border-border rounded-lg overflow-hidden shadow-lg transition-shadow relative group
-        ${!isLoading && 'hover:shadow-xl cursor-pointer'}
-        ${isLoading && 'opacity-75'}`}
+        ${!isLoading && !activating && 'hover:shadow-xl cursor-pointer'}
+        ${(isLoading || activating) && 'opacity-75'}`}
       onMouseLeave={handleMouseLeave}
       onClick={handleClick}
     >
-      {isLoading && (
+      {(isLoading || activating) && (
         <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-10 z-20">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
         </div>
       )}
 
-      {!isLoading && (
-        <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-all z-10">
-          <Button
-            variant={deleteState ? "destructive" : "ghost"}
-            size="sm"
-            className={`h-8 ${deleteState ? 'min-w-[4rem]' : 'w-8'} hover:bg-${deleteState ? 'destructive/90' : 'background/90'} hover:text-${deleteState ? 'destructive-foreground' : 'foreground'}`}
-            onClick={handleDelete}
-          >
-            {deleteState ? (
-              <span className="text-sm font-medium">really?</span>
-            ) : (
-              <Cross className="h-4 w-4" />
-            )}
-          </Button>
-        </div>
-      )}
-
       <div className="p-4 h-full flex flex-col">
-        <div className="flex items-center gap-2 mb-2 text-muted-foreground">
-          <LinkIcon className="h-4 w-4" />
-          <span className="text-sm">{connectionName}</span>
+        <div className="flex items-center justify-between gap-2 mb-2">
+          <div className="flex items-center gap-2 text-muted-foreground">
+            <LinkIcon className="h-4 w-4" />
+            <span className="text-sm">{connectionName}</span>
+          </div>
+          {!isLoading && !activating && (
+            <Button
+              variant={deleteState ? "destructive" : "ghost"}
+              size="sm"
+              className={`h-9 ${deleteState ? 'min-w-[4rem]' : 'w-9'} hover:bg-${deleteState ? 'destructive/90' : 'background/90'} hover:text-${deleteState ? 'destructive-foreground' : 'foreground'}`}
+              onClick={handleDelete}
+            >
+              {deleteState ? (
+                <span className="text-sm font-medium">really?</span>
+              ) : (
+                <Cross className="h-5 w-5" />
+              )}
+            </Button>
+          )}
         </div>
-        <h3 className="text-lg font-medium text-foreground truncate mb-2">
-          {name}
-        </h3>
+        <div className="flex items-center justify-between gap-2 mb-2">
+          <h3 className="text-lg font-medium text-foreground truncate">
+            {name}
+          </h3>
+          <div className="flex items-center gap-2">
+            <span className="text-sm text-muted-foreground">{isActive ? 'Active' : 'Inactive'}</span>
+            <Switch
+              checked={isActive}
+              onCheckedChange={handleActivate}
+              onClick={(e) => e.stopPropagation()}
+              disabled={activating}
+              className={`data-[state=checked]:bg-green-500 ${activating ? 'opacity-50 cursor-wait' : ''}`}
+            />
+          </div>
+        </div>
         <p className="text-sm text-muted-foreground line-clamp-2 mb-4">
           {description}
         </p>

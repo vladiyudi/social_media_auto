@@ -92,6 +92,42 @@ export default function Campaigns() {
     }
   };
 
+  const handleCampaignActivate = async (id) => {
+    // Find current campaign
+    const campaign = campaigns.find(c => c._id === id);
+    if (!campaign) return;
+
+    // Optimistically update UI
+    setCampaigns(prev => prev.map(c => 
+      c._id === id ? { ...c, isLoading: true } : c
+    ));
+
+    try {
+      const res = await fetch(`/api/campaigns/${id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ action: 'toggle' }),
+      });
+
+      if (!res.ok) throw new Error('Failed to update campaign');
+      
+      const data = await res.json();
+      
+      // Update with server response
+      setCampaigns(prev => prev.map(c => 
+        c._id === id ? { ...c, isActive: data.isActive, isLoading: false } : c
+      ));
+    } catch (error) {
+      console.error('Error updating campaign:', error);
+      // Revert to original state on error
+      setCampaigns(prev => prev.map(c => 
+        c._id === id ? { ...c, isLoading: false } : c
+      ));
+    }
+  };
+
   if (loading) {
     return (
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 p-4">
@@ -128,6 +164,8 @@ export default function Campaigns() {
           platforms={campaign.platforms}
           connection={campaign.connection}
           onDelete={() => handleCampaignDelete(campaign._id)}
+          onActivate={handleCampaignActivate}
+          isActive={campaign.isActive}
           isLoading={campaign.isLoading}
         />
       ))}
