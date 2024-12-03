@@ -12,6 +12,7 @@ async function getPostsScheduledForToday() {
     
     // Find campaigns with posts scheduled for today
     const campaigns = await Campaign.find({
+      isActive: true,
       'generatedPosts.date': {
         $gte: today,
         $lt: tomorrow
